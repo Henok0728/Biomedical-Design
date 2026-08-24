@@ -1,26 +1,26 @@
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { BigButton } from '../components/ui';
-import { t } from '../i18n/copy';
-import { simulator } from '../simulator/PphSimulator';
-import type { RootStackParamList } from '../navigation/types';
-import { colors } from '../theme/colors';
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState } from "react";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { BigButton } from "../components/ui";
+import { t } from "../i18n/copy";
+import { simulator } from "../simulator/PphSimulator";
+import type { RootStackParamList } from "../navigation/types";
+import { colors } from "../theme/colors";
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'NewSession'>;
-type R = RouteProp<RootStackParamList, 'NewSession'>;
+type Nav = NativeStackNavigationProp<RootStackParamList, "NewSession">;
+type R = RouteProp<RootStackParamList, "NewSession">;
 
 export function NewSessionScreen() {
   const navigation = useNavigation<Nav>();
   const { language, deviceId } = useRoute<R>().params;
   const copy = t(language);
-  const [motherId, setMotherId] = useState('');
+  const [motherId, setMotherId] = useState("");
 
   const start = () => {
     const sessionId = `ses-${Date.now()}`;
     simulator.startSession();
-    navigation.replace('Live', {
+    navigation.replace("Live", {
       language,
       deviceId,
       sessionId,
@@ -45,8 +45,13 @@ export function NewSessionScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.paper, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: '800', color: colors.ink },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.paper,
+    padding: 20,
+    justifyContent: "center",
+  },
+  title: { fontSize: 28, fontWeight: "800", color: colors.ink },
   meta: { fontSize: 16, color: colors.muted, marginBottom: 20 },
   input: {
     backgroundColor: colors.white,

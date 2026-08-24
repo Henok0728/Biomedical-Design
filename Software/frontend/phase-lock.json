@@ -1,0 +1,30 @@
+{
+  "project": "Smart PPH",
+  "phases": [
+    {
+      "id": 1,
+      "name": "Shell",
+      "description": "Navigation through Language, Ward, Connect, Session, Live, Critical, Summary, Sync, Settings",
+      "status": "completed"
+    },
+    {
+      "id": 2,
+      "name": "Clinical brain",
+      "description": "src/clinical/evaluateState.ts (volume + Shock Index + fail-safe)",
+      "status": "completed"
+    },
+    {
+      "id": 3,
+      "name": "Simulator",
+      "description": "Demo mode streams 1 Hz readings",
+      "status": "completed"
+    },
+    {
+      "id": 6,
+      "name": "BLE ESP32",
+      "description": "BLE to the real ESP32",
+      "status": "pending"
+    }
+  ],
+  "currentPhase": 3
+}

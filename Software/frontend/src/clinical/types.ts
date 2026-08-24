@@ -1,6 +1,6 @@
-export type AlertState = 'normal' | 'monitor' | 'critical' | 'sensor_fail';
-export type Severity = 'green' | 'yellow' | 'red';
-export type Language = 'en' | 'am';
+export type AlertState = "normal" | "monitor" | "critical" | "sensor_fail";
+export type Severity = "green" | "yellow" | "red";
+export type Language = "en" | "am";
 
 export type ClinicalInput = {
   volumeMl: number;
@@ -17,7 +17,8 @@ export type DeviceReading = ClinicalInput & {
   at: number;
 };
 
-export type ClinicalEventType = 'state_change' | 'mute' | 'disconnect' | 'reconnect';
+export type ClinicalEventType =
+  "state_change" | "mute" | "disconnect" | "reconnect";
 
 export type ClinicalEvent = {
   type: ClinicalEventType;

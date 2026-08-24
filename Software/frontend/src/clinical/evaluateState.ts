@@ -1,4 +1,4 @@
-import type { AlertState, ClinicalInput, Severity } from './types';
+import type { AlertState, ClinicalInput, Severity } from "./types";
 
 /** WHO-aligned PPH volume threshold (mL). */
 export const VOLUME_MONITOR_ML = 300;
@@ -13,7 +13,10 @@ export function gramsToMl(grams: number): number {
   return grams / BLOOD_DENSITY_G_PER_ML;
 }
 
-export function shockIndex(hrBpm: number | null, sbpMmhg: number | null): number | null {
+export function shockIndex(
+  hrBpm: number | null,
+  sbpMmhg: number | null,
+): number | null {
   if (hrBpm == null || sbpMmhg == null || sbpMmhg <= 0) {
     return null;
   }
@@ -26,7 +29,7 @@ export function shockIndex(hrBpm: number | null, sbpMmhg: number | null): number
  */
 export function evaluateState(input: ClinicalInput): AlertState {
   if (input.sensorFail) {
-    return 'sensor_fail';
+    return "sensor_fail";
   }
 
   const si = input.shockIndex;
@@ -38,35 +41,35 @@ export function evaluateState(input: ClinicalInput): AlertState {
     input.volumeRateMlPer15min >= RATE_CRITICAL_ML_PER_15MIN ||
     siCritical
   ) {
-    return 'critical';
+    return "critical";
   }
 
   if (input.volumeMl >= VOLUME_MONITOR_ML || siMonitor) {
-    return 'monitor';
+    return "monitor";
   }
 
-  return 'normal';
+  return "normal";
 }
 
 export function displaySeverity(state: AlertState): Severity {
-  if (state === 'normal') {
-    return 'green';
+  if (state === "normal") {
+    return "green";
   }
-  if (state === 'monitor') {
-    return 'yellow';
+  if (state === "monitor") {
+    return "yellow";
   }
-  return 'red';
+  return "red";
 }
 
 export function stateLabelEn(state: AlertState): string {
   switch (state) {
-    case 'normal':
-      return 'Normal';
-    case 'monitor':
-      return 'Monitor';
-    case 'critical':
-      return 'Critical';
-    case 'sensor_fail':
-      return 'Sensor fail';
+    case "normal":
+      return "Normal";
+    case "monitor":
+      return "Monitor";
+    case "critical":
+      return "Critical";
+    case "sensor_fail":
+      return "Sensor fail";
   }
 }

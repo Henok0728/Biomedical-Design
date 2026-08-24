@@ -1,31 +1,31 @@
-import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme/colors';
+import type { ReactNode } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "../theme/colors";
 
 type Props = {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'danger' | 'ghost' | 'light';
+  variant?: "primary" | "danger" | "ghost" | "light";
 };
 
-export function BigButton({ title, onPress, variant = 'primary' }: Props) {
+export function BigButton({ title, onPress, variant = "primary" }: Props) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        variant === 'primary' && styles.primary,
-        variant === 'danger' && styles.danger,
-        variant === 'ghost' && styles.ghost,
-        variant === 'light' && styles.light,
+        variant === "primary" && styles.primary,
+        variant === "danger" && styles.danger,
+        variant === "ghost" && styles.ghost,
+        variant === "light" && styles.light,
         pressed && styles.pressed,
       ]}
     >
       <Text
         style={[
           styles.label,
-          variant === 'ghost' && { color: colors.navy },
-          variant === 'light' && { color: colors.ink },
+          variant === "ghost" && { color: colors.navy },
+          variant === "light" && { color: colors.ink },
         ]}
       >
         {title}
@@ -47,19 +47,23 @@ const styles = StyleSheet.create({
   base: {
     minHeight: 56,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 16,
     marginTop: 12,
   },
   primary: { backgroundColor: colors.navy },
   danger: { backgroundColor: colors.red },
-  ghost: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border },
-  light: { backgroundColor: 'rgba(255,255,255,0.92)' },
+  ghost: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  light: { backgroundColor: "rgba(255,255,255,0.92)" },
   pressed: { opacity: 0.85 },
   label: {
     color: colors.white,
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

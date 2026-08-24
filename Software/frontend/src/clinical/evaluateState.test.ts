@@ -1,15 +1,15 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
   BLOOD_DENSITY_G_PER_ML,
   displaySeverity,
   evaluateState,
   gramsToMl,
   shockIndex,
-} from './evaluateState';
+} from "./evaluateState";
 
-describe('evaluateState', () => {
-  it('is green below 300 mL and SI < 0.7', () => {
+describe("evaluateState", () => {
+  it("is green below 300 mL and SI < 0.7", () => {
     assert.equal(
       evaluateState({
         volumeMl: 200,
@@ -17,11 +17,11 @@ describe('evaluateState', () => {
         shockIndex: 0.6,
         sensorFail: false,
       }),
-      'normal',
+      "normal",
     );
   });
 
-  it('goes yellow at 350 mL', () => {
+  it("goes yellow at 350 mL", () => {
     assert.equal(
       evaluateState({
         volumeMl: 350,
@@ -29,11 +29,11 @@ describe('evaluateState', () => {
         shockIndex: 0.55,
         sensorFail: false,
       }),
-      'monitor',
+      "monitor",
     );
   });
 
-  it('goes yellow when SI is 0.7–0.9 even if volume is low', () => {
+  it("goes yellow when SI is 0.7–0.9 even if volume is low", () => {
     assert.equal(
       evaluateState({
         volumeMl: 100,
@@ -41,11 +41,11 @@ describe('evaluateState', () => {
         shockIndex: 0.8,
         sensorFail: false,
       }),
-      'monitor',
+      "monitor",
     );
   });
 
-  it('goes red at 500 mL', () => {
+  it("goes red at 500 mL", () => {
     assert.equal(
       evaluateState({
         volumeMl: 500,
@@ -53,11 +53,11 @@ describe('evaluateState', () => {
         shockIndex: 0.6,
         sensorFail: false,
       }),
-      'critical',
+      "critical",
     );
   });
 
-  it('goes red when SI is 1.0', () => {
+  it("goes red when SI is 1.0", () => {
     assert.equal(
       evaluateState({
         volumeMl: 120,
@@ -65,11 +65,11 @@ describe('evaluateState', () => {
         shockIndex: 1.0,
         sensorFail: false,
       }),
-      'critical',
+      "critical",
     );
   });
 
-  it('goes red at 300 mL in 15 minutes', () => {
+  it("goes red at 300 mL in 15 minutes", () => {
     assert.equal(
       evaluateState({
         volumeMl: 280,
@@ -77,11 +77,11 @@ describe('evaluateState', () => {
         shockIndex: 0.5,
         sensorFail: false,
       }),
-      'critical',
+      "critical",
     );
   });
 
-  it('fail-safe red when the sensor is disconnected', () => {
+  it("fail-safe red when the sensor is disconnected", () => {
     assert.equal(
       evaluateState({
         volumeMl: 0,
@@ -89,12 +89,12 @@ describe('evaluateState', () => {
         shockIndex: 0.5,
         sensorFail: true,
       }),
-      'sensor_fail',
+      "sensor_fail",
     );
-    assert.equal(displaySeverity('sensor_fail'), 'red');
+    assert.equal(displaySeverity("sensor_fail"), "red");
   });
 
-  it('ignores missing Shock Index and uses volume only', () => {
+  it("ignores missing Shock Index and uses volume only", () => {
     assert.equal(
       evaluateState({
         volumeMl: 200,
@@ -102,17 +102,17 @@ describe('evaluateState', () => {
         shockIndex: null,
         sensorFail: false,
       }),
-      'normal',
+      "normal",
     );
   });
 });
 
-describe('conversions', () => {
-  it('converts grams to mL with blood density 1.06', () => {
+describe("conversions", () => {
+  it("converts grams to mL with blood density 1.06", () => {
     assert.equal(gramsToMl(318), 318 / BLOOD_DENSITY_G_PER_ML);
   });
 
-  it('computes Shock Index as HR / SBP', () => {
+  it("computes Shock Index as HR / SBP", () => {
     assert.equal(shockIndex(90, 100), 0.9);
     assert.equal(shockIndex(90, 0), null);
     assert.equal(shockIndex(null, 110), null);

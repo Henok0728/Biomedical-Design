@@ -1,5 +1,9 @@
-import { displaySeverity, evaluateState, shockIndex } from '../clinical/evaluateState';
-import type { AlertState, DeviceReading } from '../clinical/types';
+import {
+  displaySeverity,
+  evaluateState,
+  shockIndex,
+} from "../clinical/evaluateState";
+import type { AlertState, DeviceReading } from "../clinical/types";
 
 export type SimulatorSnapshot = DeviceReading & {
   state: AlertState;

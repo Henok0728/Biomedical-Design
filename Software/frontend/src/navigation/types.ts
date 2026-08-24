@@ -1,11 +1,16 @@
-import type { AlertState, Language } from '../clinical/types';
+import type { AlertState, Language } from "../clinical/types";
 
 export type RootStackParamList = {
   Language: undefined;
   Ward: { language: Language };
   Connect: { language: Language; deviceId: string };
   NewSession: { language: Language; deviceId: string; demo: boolean };
-  Live: { language: Language; deviceId: string; sessionId: string; motherId?: string };
+  Live: {
+    language: Language;
+    deviceId: string;
+    sessionId: string;
+    motherId?: string;
+  };
   Critical: { language: Language; sessionId: string };
   Summary: {
     language: Language;
