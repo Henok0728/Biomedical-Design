@@ -26,7 +26,7 @@ export function LanguageScreen() {
         style={[styles.btn, styles.secondary]}
         onPress={() => navigation.replace("Ward", { language: "en" })}
       >
-        <Text style={[styles.btnText, { color: colors.navy }]}>
+        <Text style={[styles.btnText, { color: colors.white }]}>
           {copy.english}
         </Text>
       </Pressable>

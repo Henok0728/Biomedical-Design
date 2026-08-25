@@ -32,13 +32,19 @@ class PphSimulator {
   }
 
   startSession() {
-    this.volumeMl = 80;
+    this.volumeMl = 100;
     this.hrBpm = 78;
     this.sbpMmhg = 118;
     this.sensorFail = false;
     this.seq = 0;
-    this.startedAt = Date.now();
-    this.volumeHistory = [{ at: Date.now(), volumeMl: this.volumeMl }];
+    const now = Date.now();
+    this.startedAt = now;
+    this.volumeHistory = [
+      { at: now - 30000, volumeMl: 50 },
+      { at: now - 20000, volumeMl: 75 },
+      { at: now - 10000, volumeMl: 90 },
+      { at: now, volumeMl: 100 },
+    ];
     this.ensureTick();
     this.emit();
   }
@@ -124,6 +130,10 @@ class PphSimulator {
     }
     this.timer = setInterval(() => {
       this.seq += 1;
+      this.volumeHistory.push({ at: Date.now(), volumeMl: this.volumeMl });
+      if (this.volumeHistory.length > 120) {
+        this.volumeHistory.shift();
+      }
       this.emit();
     }, 1000);
   }

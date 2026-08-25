@@ -199,22 +199,22 @@ function SessionCard({
       </View>
 
       <View style={styles.cardMetrics}>
-        <Text style={styles.metricText}>
-          Peak:{" "}
+        <View style={styles.metricItem}>
+          <Text style={styles.metricLabel}>Peak Vol</Text>
           <Text style={styles.metricBold}>
             {Math.round(session.peakVolumeMl)} mL
           </Text>
-        </Text>
-        <Text style={styles.metricText}>
-          Status:{" "}
+        </View>
+        <View style={styles.metricItem}>
+          <Text style={styles.metricLabel}>Status</Text>
           <Text style={styles.metricBold}>
             {stateLabelEn(session.finalState)}
           </Text>
-        </Text>
-        <Text style={styles.metricText}>
-          Duration:{" "}
+        </View>
+        <View style={styles.metricItem}>
+          <Text style={styles.metricLabel}>Duration</Text>
           <Text style={styles.metricBold}>{session.durationMinutes} min</Text>
-        </Text>
+        </View>
       </View>
 
       {isQueued && onSyncIndividual ? (
@@ -408,16 +408,26 @@ const styles = StyleSheet.create({
   },
   cardMetrics: {
     flexDirection: "row",
-    gap: 16,
-    marginTop: 4,
+    flexWrap: "wrap",
+    marginTop: 8,
+    gap: 8,
   },
-  metricText: {
-    fontSize: 14,
+  metricItem: {
+    flexDirection: "column",
+    minWidth: 80,
+  },
+  metricLabel: {
+    fontSize: 11,
     color: colors.muted,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   metricBold: {
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "800",
     color: colors.ink,
+    marginTop: 1,
   },
   singleSyncBtn: {
     marginTop: 10,

@@ -167,8 +167,8 @@ export function LiveMonitoringScreen() {
         {/* Realtime Trend Sparkline */}
         <View style={styles.sparklineBox}>
           <Sparkline
-            data={snap.history || []}
-            height={36}
+            data={(snap.history || []).map((h) => ({ at: h.at, value: h.volumeMl }))}
+            height={52}
             color={palette.text}
             showLabels={false}
           />
@@ -360,8 +360,9 @@ const styles = StyleSheet.create({
     marginTop: -4,
   },
   sparklineBox: {
-    marginBottom: 10,
-    paddingHorizontal: 8,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+    minHeight: 60,
   },
   metricGrid: {
     flexDirection: "row",
