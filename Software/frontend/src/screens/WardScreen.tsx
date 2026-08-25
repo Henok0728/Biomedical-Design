@@ -1,8 +1,10 @@
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/copy";
 import type { RootStackParamList } from "../navigation/types";
+import { sessionStore } from "../services/sessionStore";
 import { colors } from "../theme/colors";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "Ward">;
@@ -29,11 +31,26 @@ export function WardScreen() {
   const navigation = useNavigation<Nav>();
   const { language } = useRoute<R>().params;
   const copy = t(language);
+  const [queuedCount, setQueuedCount] = useState(0);
+
+  const updateCounts = async () => {
+    const queued = await sessionStore.getQueuedSessions();
+    setQueuedCount(queued.length);
+  };
+
+  useEffect(() => {
+    updateCounts();
+    const unsubscribe = sessionStore.subscribe(() => {
+      updateCounts();
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <View style={styles.screen}>
       <Text style={styles.title}>{copy.ward}</Text>
       <Text style={styles.sub}>{copy.devices}</Text>
+
       {MATS.map((mat) => (
         <Pressable
           key={mat.id}
@@ -54,12 +71,29 @@ export function WardScreen() {
           </View>
         </Pressable>
       ))}
+
+      {/* Sync Queue Navigation Card */}
       <Pressable
-        style={styles.link}
+        style={styles.syncCard}
         onPress={() => navigation.navigate("Sync", { language })}
       >
-        <Text style={styles.linkText}>{copy.sync}</Text>
+        <View style={styles.syncCardBody}>
+          <Text style={styles.syncCardTitle}>{copy.sync}</Text>
+          <Text style={styles.syncCardSub}>
+            {queuedCount > 0
+              ? `${queuedCount} session${queuedCount === 1 ? "" : "s"} waiting for DHIS2 upload`
+              : "All records synced"}
+          </Text>
+        </View>
+        {queuedCount > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{queuedCount}</Text>
+          </View>
+        ) : (
+          <Text style={styles.syncedCheck}>✓</Text>
+        )}
       </Pressable>
+
       <Pressable
         style={styles.link}
         onPress={() => navigation.navigate("Settings", { language })}
@@ -88,6 +122,46 @@ const styles = StyleSheet.create({
   body: { padding: 14, flex: 1 },
   name: { fontSize: 20, fontWeight: "700", color: colors.ink },
   meta: { fontSize: 15, color: colors.muted, marginTop: 2 },
+  syncCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  syncCardBody: {
+    flex: 1,
+  },
+  syncCardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.ink,
+  },
+  syncCardSub: {
+    fontSize: 13,
+    color: colors.muted,
+    marginTop: 2,
+  },
+  badge: {
+    backgroundColor: colors.navy,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  badgeText: {
+    color: colors.white,
+    fontWeight: "800",
+    fontSize: 13,
+  },
+  syncedCheck: {
+    color: colors.green,
+    fontWeight: "900",
+    fontSize: 20,
+  },
   link: { paddingVertical: 12 },
   linkText: { color: colors.navy, fontSize: 16, fontWeight: "600" },
 });

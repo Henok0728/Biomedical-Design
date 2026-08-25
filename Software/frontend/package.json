@@ -8,9 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "tsx --test src/clinical/evaluateState.test.ts src/services/alarm.test.ts"
+    "test": "tsx --test src/clinical/evaluateState.test.ts src/services/alarm.test.ts src/services/sessionStore.test.ts"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^7.1.33",
     "@react-navigation/native-stack": "^7.9.0",
     "expo": "~57.0.16",

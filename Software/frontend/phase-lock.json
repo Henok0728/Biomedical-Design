@@ -35,7 +35,7 @@
       "id": 5,
       "name": "Sessions + offline",
       "description": "Offline session logging and DHIS2 mock sync queue",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": 6,
@@ -56,5 +56,5 @@
       "status": "pending"
     }
   ],
-  "currentPhase": 4
+  "currentPhase": 5
 }
