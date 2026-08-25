@@ -9,6 +9,7 @@ export type SimulatorSnapshot = DeviceReading & {
   state: AlertState;
   severity: ReturnType<typeof displaySeverity>;
   startedAt: number | null;
+  history: { at: number; volumeMl: number }[];
 };
 
 type Listener = (snap: SimulatorSnapshot) => void;
@@ -103,6 +104,7 @@ class PphSimulator {
       state,
       severity: displaySeverity(state),
       startedAt: this.startedAt,
+      history: [...this.volumeHistory],
     };
   }
 

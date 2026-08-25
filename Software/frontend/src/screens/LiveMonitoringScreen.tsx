@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
 import { displaySeverity, stateLabelEn } from "../clinical/evaluateState";
 import type { Language } from "../clinical/types";
+import { Sparkline } from "../components/Sparkline";
 import { BigButton } from "../components/ui";
 import { guidance, t } from "../i18n/copy";
 import type { RootStackParamList } from "../navigation/types";
@@ -161,6 +162,16 @@ export function LiveMonitoringScreen() {
           <Text style={[styles.volumeUnit, { color: palette.text }]}>
             mL · {copy.volume}
           </Text>
+        </View>
+
+        {/* Realtime Trend Sparkline */}
+        <View style={styles.sparklineBox}>
+          <Sparkline
+            data={snap.history || []}
+            height={36}
+            color={palette.text}
+            showLabels={false}
+          />
         </View>
 
         {/* Metric Cards Grid */}
@@ -347,6 +358,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     opacity: 0.9,
     marginTop: -4,
+  },
+  sparklineBox: {
+    marginBottom: 10,
+    paddingHorizontal: 8,
   },
   metricGrid: {
     flexDirection: "row",

@@ -114,6 +114,36 @@ export function SessionSummaryScreen() {
         />
 
         <BigButton
+          title="📤 Share Referral Summary"
+          variant="light"
+          onPress={async () => {
+            const checklistSummary = events
+              .filter((e) => e.type === "checklist_toggle")
+              .map((e) => `• ${e.details}`)
+              .join("\n");
+
+            const shareText = `🏥 SMART PPH CLINICAL HANDOFF REPORT
+----------------------------------
+Session: ${params.sessionId}
+Device: PPH-MAT-04
+Peak Blood Volume: ${Math.round(params.peakVolumeMl)} mL
+Clinical Status: ${stateLabelEn(params.finalState).toUpperCase()}
+Monitoring Duration: ${durationMin} min
+Recorded Events: ${events.length}
+
+Response Bundle Actions:
+${checklistSummary || "• Standard emergency bundle monitored"}
+
+Generated via Smart PPH Facility System (Ethiopia PHCU)`;
+
+            try {
+              const { Share } = require("react-native");
+              await Share.share({ message: shareText, title: "PPH Clinical Handoff" });
+            } catch {}
+          }}
+        />
+
+        <BigButton
           title={copy.ward}
           variant="ghost"
           onPress={() =>
