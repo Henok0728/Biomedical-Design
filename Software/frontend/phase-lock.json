@@ -2,6 +2,12 @@
   "project": "Smart PPH",
   "phases": [
     {
+      "id": 0,
+      "name": "Lock the product",
+      "description": "One story, Android/Expo viewer + logger companion to ESP32 mat, offline & demo first",
+      "status": "completed"
+    },
+    {
       "id": 1,
       "name": "Shell",
       "description": "Navigation through Language, Ward, Connect, Session, Live, Critical, Summary, Sync, Settings",
@@ -20,11 +26,35 @@
       "status": "completed"
     },
     {
+      "id": 4,
+      "name": "Live UX + alarm",
+      "description": "Full chrome colors, arm's length volume & Shock Index, 5-min audio/vibration mute with countdown, keep-awake, emergency response checklist",
+      "status": "completed"
+    },
+    {
+      "id": 5,
+      "name": "Sessions + offline",
+      "description": "Offline session logging and DHIS2 mock sync queue",
+      "status": "pending"
+    },
+    {
       "id": 6,
       "name": "BLE ESP32",
       "description": "BLE to the real ESP32",
       "status": "pending"
+    },
+    {
+      "id": 7,
+      "name": "i18n + cheap-phone pass",
+      "description": "Amharic & English fast toggles and low-end Android display testing",
+      "status": "completed"
+    },
+    {
+      "id": 8,
+      "name": "Demo freeze",
+      "description": "90-second judge script rehearsal",
+      "status": "pending"
     }
   ],
-  "currentPhase": 3
+  "currentPhase": 4
 }
