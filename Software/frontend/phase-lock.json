@@ -1,5 +1,15 @@
 {
   "project": "Smart PPH",
+  "notes": {
+    "softwareRole": "Offline-first viewer + logger companion for facility Postpartum Hemorrhage monitoring in Ethiopia PHCUs. Operates in first-class Demo mode on Expo/Android with zero hardware dependency, while fully adhering to the agreed ESP32 BLE protocol interface for seamless plug-and-play connection.",
+    "hardwareBridgeContract": {
+      "serviceUuid": "4fafc201-1fb5-459e-8fcc-c5c9c331914b",
+      "characteristicUuid": "beb5483e-36e1-4688-b7f5-ea07361b26a8",
+      "payloadSchema": "vol_ml, rate_15, hr, sbp, si, state, batt, seq, sensor_fail",
+      "parserModule": "src/services/bleParser.ts",
+      "status": "protocol_agreed_and_unit_tested"
+    }
+  },
   "phases": [
     {
       "id": 0,
@@ -39,9 +49,9 @@
     },
     {
       "id": 6,
-      "name": "BLE ESP32",
-      "description": "BLE to the real ESP32",
-      "status": "pending"
+      "name": "BLE ESP32 Bridge Interface",
+      "description": "Agreed 1 Hz notify protocol (vol_ml, rate_15, hr, sbp, si, state, batt, seq) implemented and tested with parser and state-mismatch detection",
+      "status": "ready_for_hardware"
     },
     {
       "id": 7,
@@ -52,9 +62,9 @@
     {
       "id": 8,
       "name": "Demo freeze",
-      "description": "90-second judge script rehearsal",
-      "status": "pending"
+      "description": "90-second judge script rehearsal and test freeze",
+      "status": "completed"
     }
   ],
-  "currentPhase": 5
+  "currentPhase": 8
 }
