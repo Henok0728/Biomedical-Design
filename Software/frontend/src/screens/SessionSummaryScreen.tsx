@@ -1,12 +1,13 @@
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, ScrollView, Alert } from "react-native";
 import { stateLabelEn } from "../clinical/evaluateState";
 import { BigButton } from "../components/ui";
 import { t } from "../i18n/copy";
 import type { RootStackParamList } from "../navigation/types";
 import { alarmManager } from "../services/alarm";
+import { exportSessionPdf } from "../services/pdfReport";
 import { sessionStore, type SessionRecord } from "../services/sessionStore";
 import { colors } from "../theme/colors";
 
@@ -18,6 +19,8 @@ export function SessionSummaryScreen() {
   const params = useRoute<R>().params;
   const copy = t(params.language);
   const [saved, setSaved] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const savedRecordRef = useRef<SessionRecord | null>(null);
 
   const durationMin = Math.max(
     1,
@@ -41,10 +44,24 @@ export function SessionSummaryScreen() {
       syncStatus: "queued",
     };
 
+    savedRecordRef.current = record;
     sessionStore.saveSession(record).then(() => {
       setSaved(true);
     });
   }, [durationMin, events, params]);
+
+  const handleExportPdf = async () => {
+    const record = savedRecordRef.current;
+    if (!record) return;
+    setExporting(true);
+    try {
+      await exportSessionPdf(record, events);
+    } catch (err) {
+      Alert.alert("Export Failed", "Could not generate PDF. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -113,35 +130,17 @@ export function SessionSummaryScreen() {
           }
         />
 
-        <BigButton
-          title="📤 Share Referral Summary"
-          variant="light"
-          onPress={async () => {
-            const checklistSummary = events
-              .filter((e) => e.type === "checklist_toggle")
-              .map((e) => `• ${e.details}`)
-              .join("\n");
-
-            const shareText = `🏥 SMART PPH CLINICAL HANDOFF REPORT
-----------------------------------
-Session: ${params.sessionId}
-Device: PPH-MAT-04
-Peak Blood Volume: ${Math.round(params.peakVolumeMl)} mL
-Clinical Status: ${stateLabelEn(params.finalState).toUpperCase()}
-Monitoring Duration: ${durationMin} min
-Recorded Events: ${events.length}
-
-Response Bundle Actions:
-${checklistSummary || "• Standard emergency bundle monitored"}
-
-Generated via Smart PPH Facility System (Ethiopia PHCU)`;
-
-            try {
-              const { Share } = require("react-native");
-              await Share.share({ message: shareText, title: "PPH Clinical Handoff" });
-            } catch {}
-          }}
-        />
+        <Pressable
+          style={[styles.pdfButton, exporting && styles.pdfButtonDisabled]}
+          onPress={handleExportPdf}
+          disabled={exporting || !saved}
+        >
+          {exporting ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : (
+            <Text style={styles.pdfButtonText}>📄 Export PDF Report</Text>
+          )}
+        </Pressable>
 
         <BigButton
           title={copy.ward}
@@ -246,5 +245,27 @@ const styles = StyleSheet.create({
     color: colors.greenDark,
     fontSize: 14,
     fontWeight: "700",
+  },
+  pdfButton: {
+    backgroundColor: colors.navy,
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    shadowColor: colors.navy,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+    minHeight: 56,
+  },
+  pdfButtonDisabled: {
+    opacity: 0.65,
+  },
+  pdfButtonText: {
+    color: colors.white,
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: 0.2,
   },
 });
