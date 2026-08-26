@@ -168,8 +168,22 @@ export class SessionStore {
         ],
       };
 
-      // Simulate network request delay (250ms)
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      // Send to real backend API
+      // Use 10.0.2.2 for Android emulator, localhost for web/iOS
+      const { Platform } = require('react-native');
+      const API_URL = Platform.OS === 'web' || Platform.OS === 'ios' 
+        ? "http://localhost:3000/api/sync-session" 
+        : "http://10.0.2.2:3000/api/sync-session";
+      
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dhis2Payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Backend responded with error");
+      }
 
       // Mark as synced
       session.syncStatus = "synced";
