@@ -79,11 +79,9 @@ export function ConnectScreen() {
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.modalNote}>
-                For rehearsals & judge presentations in Expo Go, tap Demo Mode
-                below.
+                You are in demo mode!!
               </Text>
             </View>
-
             <BigButton
               title="Launch in Demo Mode"
               onPress={() => {
