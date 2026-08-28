@@ -27,24 +27,38 @@ Biomedical Engineering Competition Prototype for Real-Time Postpartum Hemorrhage
                      ┌───────────────────┐
                      │ React Native App  │
                      │ (Android / Expo)  │
-                     └───────────────────┘
+                     └─────────┬─────────┘
 
-REAL HARDWARE PATH:
+HARDWARE SENSORS (PHYSICAL ESP32 OR PYTHON HARDWARE SIMULATOR):
 Load Cell (HX711) ──┐
 MAX30102 ───────────┤
 TCS34725 ───────────┤
-MPU6050 ────────────┤→ ESP32 (Wi-Fi) ──► Node.js Backend ──► React Native App
+MPU6050 ────────────┤→ ESP32 (Wi-Fi) / Python Simulator ──► Node.js Backend ──► Mobile App
 ```
 
 The system seamlessly supports **TWO sensor sources**:
-1. **Source A — Real ESP32 Hardware**: Physical sensors connected via Wi-Fi.
+1. **Source A — ESP32 Hardware (Physical PCB or Python Simulator)**: Physical ESP32 hardware or lightweight Python ESP32 simulator (`Hardware/hardware_simulator.py`).
 2. **Source B — Web Simulator**: Browser control console for live competition scenario presentations.
 
 The backend normalizes both sources into the exact same unified `sensor_data` protocol format so the mobile app requires zero changes when toggling sources.
 
 ---
 
-## 2. Hardware Pinout (KiCad Schematic Mapping)
+## 2. Python ESP32 Hardware Simulator (`hardware_simulator.py`)
+
+If physical hardware PCB is unavailable, run the Python Hardware Simulator:
+```bash
+python Hardware/hardware_simulator.py ws://localhost:3000/ws
+```
+This script:
+- Connects directly to the backend over WebSocket as `source = "ESP32"`.
+- Streams 1 Hz realistic sensor updates (Mass, Rate, Pulse Oximeter HR/SpO2, TCS34725 RGB, MPU6050 Motion Score).
+- Serves an embedded **Web Control Panel** at `http://localhost:5000` (accessible from laptop or phone).
+- Provides an **Interactive Terminal CLI** menu for instant scenario triggers.
+
+---
+
+## 3. Hardware Pinout (KiCad Schematic Mapping)
 
 | Component | Function / Pin | ESP32 GPIO |
 |-----------|----------------|------------|
@@ -58,12 +72,7 @@ The backend normalizes both sources into the exact same unified `sensor_data` pr
 
 ---
 
-## 3. Quick Start & Execution Commands
-
-### Prerequisites
-- Node.js (v18+ or v20+)
-- PlatformIO (for ESP32 firmware)
-- Expo CLI / React Native environment
+## 4. Quick Start & Execution Commands
 
 ### Step A: Start Node.js Backend
 ```bash
@@ -74,14 +83,13 @@ npm run dev
 * Backend API: `http://localhost:3000`
 * WebSocket: `ws://localhost:3000/ws`
 
-### Step B: Launch Web Simulator
-Open `pph-monitor/simulator/index.html` directly in any web browser, or serve using:
+### Step B: Run Python Hardware Simulator OR Web Simulator
 ```bash
+# Option 1: Python ESP32 Hardware Simulator (Web console at http://localhost:5000)
+python Hardware/hardware_simulator.py ws://localhost:3000/ws
+
+# Option 2: Web Simulator Console (Browser panel at http://localhost:8080)
 npx serve pph-monitor/simulator -p 8080
-```
-Or via Docker:
-```bash
-docker-compose up --build
 ```
 
 ### Step C: Launch React Native Android App
@@ -97,22 +105,19 @@ In the app:
 
 ---
 
-## 4. Competition Demonstration Workflow
+## 5. Competition Demonstration Workflow
 
-1. **Launch Systems**: Start Node Backend, Web Simulator, and Android App.
+1. **Launch Systems**: Start Node Backend, Python Simulator, and Android App.
 2. **Verify Connection**:
-   - Android App displays `● BACKEND CONNECTED` and `SOURCE: SIMULATOR`.
-3. **Trigger Scenarios on Web Simulator**:
-   - **`NORMAL`**: Stable 100g mass, HR 75 bpm, normal trend.
-   - **`INCREASING BLEEDING`**: Mass and fluid rate increase progressively (+45 g/min), heart rate rises to 105 bpm. Live graphs update immediately on Android dashboard.
-   - **`MOVEMENT`**: High motion score triggers motion warning banner: `⚠️ MOTION: HIGH · MEASUREMENT QUALITY: UNRELIABLE`.
-   - **`RESET`**: Resets mass accumulation to zero.
-4. **Hardware Switch**:
-   - Disconnect simulator or tap `[ ESP32 HARDWARE ]` on Web Simulator.
-   - ESP32 connects over Wi-Fi and streams live physical sensor data to backend. Android app updates seamlessly without needing restart.
+   - Android App displays `● BACKEND CONNECTED` and `SOURCE: ESP32`.
+3. **Trigger Scenarios via Web UI (`http://localhost:5000`) or Terminal CLI**:
+   - **`1` (NORMAL)**: Stable 100g mass, HR 75 bpm, normal trend.
+   - **`3` (INCREASING BLEEDING)**: Mass and fluid rate increase progressively (+45 g/min), heart rate rises to 105 bpm. Live graphs update immediately on Android dashboard.
+   - **`5` (MOVEMENT)**: High motion score triggers motion warning banner: `⚠️ MOTION: HIGH · MEASUREMENT QUALITY: UNRELIABLE`.
+   - **`7` (RESET)**: Resets mass accumulation to zero.
 
 ---
 
-## 5. Engineering & Safety Notice
+## 6. Engineering & Safety Notice
 
 > **Biomedical Engineering Competition Prototype**: Not clinically validated. All simulated thresholds are marked with `DEMO SIMULATION THRESHOLD` labels in compliance with biomedical engineering standards.

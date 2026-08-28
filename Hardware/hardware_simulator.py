@@ -15,6 +15,10 @@ import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import websockets
 
+# Ensure UTF-8 output encoding on Windows consoles
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 BACKEND_WS_URL = os.environ.get("BACKEND_WS_URL", "ws://localhost:3000/ws")
 HTTP_PORT = int(os.environ.get("HTTP_PORT", 5000))
 
@@ -304,16 +308,16 @@ class WebHandler(BaseHTTPRequestHandler):
 
 def start_http_server():
     server = HTTPServer(('0.0.0.0', HTTP_PORT), WebHandler)
-    print(f"🌐 ESP32 Python Control Console running at: http://localhost:{HTTP_PORT}")
+    print(f"[HTTP] ESP32 Python Control Console running at: http://localhost:{HTTP_PORT}")
     server.serve_forever()
 
 async def ws_loop():
     url = sys.argv[1] if len(sys.argv) > 1 else BACKEND_WS_URL
-    print(f"📡 Connecting Python ESP32 Simulator to Backend: {url}")
+    print(f"[WS] Connecting Python ESP32 Simulator to Backend: {url}")
     while True:
         try:
             async with websockets.connect(url) as ws:
-                print("✅ Connected to Backend WebSocket! Registering source as ESP32...")
+                print("[WS] Connected to Backend WebSocket! Registering source as ESP32...")
                 # Automatically switch backend active source to ESP32
                 await ws.send(json.dumps({"type": "set_source", "source": "ESP32"}))
 
@@ -323,7 +327,7 @@ async def ws_loop():
                     print(f"  [ESP32 -> Backend] Mass: {packet['data']['mass_g']}g | Rate: {packet['data']['fluid_rate_g_min']}g/min | HR: {packet['data']['heart_rate']} | SpO2: {packet['data']['spo2']} | Quality: {packet['data']['measurement_quality']}")
                     await asyncio.sleep(1.0)
         except Exception as e:
-            print(f"⚠️ Connection lost ({e}). Reconnecting in 3s...")
+            print(f"[WS] Connection lost ({e}). Reconnecting in 3s...")
             await asyncio.sleep(3.0)
 
 def terminal_cli():
