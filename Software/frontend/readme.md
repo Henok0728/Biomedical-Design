@@ -24,7 +24,7 @@ npm start
 6. **Fail sensor** → fail-safe red.
 7. End session → summary → sync queue.
 
-Do not tell judges the PCB measures Shock Index. There is no BP cuff. Demo SI is simulated. Hardware alerts are **volume (HX711)**.
+**volume (HX711)**.
 
 **If hardware is flashed** with `firmware/esp32_softap_reading.ino` (or any firmware that answers `GET /reading`):
 

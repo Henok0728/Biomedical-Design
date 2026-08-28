@@ -11,7 +11,7 @@ const en = {
   scanBle: "BLE later",
   demoMode: "Demo mode (no hardware)",
   demoHint:
-    "Judges: Demo mode works without a mat. Wi-Fi mat: join SSID PPH-MAT-04 then connect.",
+    "Demo mode works without a mat. Wi-Fi mat: join SSID PPH-MAT-04 then connect.",
   wifiConnect: "Connect Wi-Fi mat",
   wifiHostLabel: "Mat IP",
   wifiTesting: "Pinging mat…",
