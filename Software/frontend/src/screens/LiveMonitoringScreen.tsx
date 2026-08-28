@@ -6,10 +6,10 @@ import { Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
 import { displaySeverity, stateLabelEn } from "../clinical/evaluateState";
 import type { Language } from "../clinical/types";
 import { Sparkline } from "../components/Sparkline";
-import { BigButton } from "../components/ui";
 import { guidance, t } from "../i18n/copy";
 import type { RootStackParamList } from "../navigation/types";
 import { alarmManager } from "../services/alarm";
+import { fetchMatReading } from "../services/wifiClient";
 import { simulator } from "../simulator/PphSimulator";
 import { useSimulatorSnapshot } from "../simulator/SimulatorContext";
 import { colors, severityColors } from "../theme/colors";
@@ -37,7 +37,7 @@ export function LiveMonitoringScreen() {
   const navigation = useNavigation<Nav>();
   const routeParams = useRoute<R>().params;
   const [currentLang, setCurrentLang] = useState<Language>(routeParams.language);
-  const { deviceId, sessionId, motherId } = routeParams;
+  const { deviceId, sessionId, motherId, demo, wifiHost } = routeParams;
 
   const copy = t(currentLang);
   const snap = useSimulatorSnapshot();
@@ -45,7 +45,35 @@ export function LiveMonitoringScreen() {
   const pushedCritical = useRef(false);
   const [, setTick] = useState(0);
 
-  // Sync alarm manager state
+  useEffect(() => {
+    if (demo || !wifiHost) {
+      return;
+    }
+    let misses = 0;
+    let cancelled = false;
+    const pull = async () => {
+      const parsed = await fetchMatReading(wifiHost);
+      if (cancelled) {
+        return;
+      }
+      if (!parsed) {
+        misses += 1;
+        if (misses >= 3) {
+          simulator.setSensorFail(true);
+        }
+        return;
+      }
+      misses = 0;
+      simulator.applyRemoteReading(parsed.reading);
+    };
+    pull();
+    const id = setInterval(pull, 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [demo, wifiHost]);
+
   useEffect(() => {
     alarmManager.setAlertState(snap.state);
   }, [snap.state]);
@@ -198,7 +226,7 @@ export function LiveMonitoringScreen() {
             </Text>
             <Text style={styles.metricSub}>
               {snap.shockIndex == null
-                ? "Pending"
+                ? copy.siNotOnDevice
                 : snap.shockIndex >= 0.9
                   ? "CRITICAL"
                   : snap.shockIndex >= 0.7
@@ -258,7 +286,7 @@ export function LiveMonitoringScreen() {
           </Pressable>
         </View>
 
-        {/* Demo Simulator Controls Bar */}
+        {demo ? (
         <View style={styles.demoControlBox}>
           <Text style={styles.demoControlTitle}>DEMO CONTROLS</Text>
           <View style={styles.demoButtonRow}>
@@ -284,6 +312,11 @@ export function LiveMonitoringScreen() {
             </Text>
           </Pressable>
         </View>
+        ) : (
+          <Text style={[styles.wifiBadge, { color: palette.text }]}>
+            {copy.wifiLive} · {wifiHost}
+          </Text>
+        )}
 
         {/* End Session */}
         <Pressable onPress={endSession} style={styles.endButton}>
@@ -439,6 +472,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
     color: colors.ink,
+  },
+  wifiBadge: {
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 12,
+    opacity: 0.9,
   },
   demoControlBox: {
     backgroundColor: "rgba(0, 0, 0, 0.22)",

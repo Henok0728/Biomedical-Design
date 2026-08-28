@@ -49,9 +49,9 @@
     },
     {
       "id": 6,
-      "name": "BLE ESP32 Bridge Interface",
-      "description": "Agreed 1 Hz notify protocol (vol_ml, rate_15, hr, sbp, si, state, batt, seq) implemented and tested with parser and state-mismatch detection",
-      "status": "ready_for_hardware"
+      "name": "Wi-Fi ESP32 link (BLE later)",
+      "description": "Phone joins mat SoftAP and polls GET /reading JSON at 1 Hz. BLE parser kept for a later revision.",
+      "status": "implemented_softap_http"
     },
     {
       "id": 7,

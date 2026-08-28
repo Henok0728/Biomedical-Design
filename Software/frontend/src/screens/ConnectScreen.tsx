@@ -2,11 +2,23 @@ import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { BigButton } from "../components/ui";
 import { t } from "../i18n/copy";
 import type { RootStackParamList } from "../navigation/types";
-import { BLE_CONFIG } from "../services/bleParser";
+import {
+  WIFI_DEFAULT_HOST,
+  WIFI_PASSWORD,
+  WIFI_SSID,
+  fetchMatReading,
+} from "../services/wifiClient";
 import { colors } from "../theme/colors";
 
 type Nav = NativeStackNavigationProp<RootStackParamList, "Connect">;
@@ -16,7 +28,27 @@ export function ConnectScreen() {
   const navigation = useNavigation<Nav>();
   const { language, deviceId } = useRoute<R>().params;
   const copy = t(language);
-  const [showBleInfo, setShowBleInfo] = useState(false);
+  const [host, setHost] = useState(WIFI_DEFAULT_HOST);
+  const [status, setStatus] = useState<"idle" | "testing" | "ok" | "fail">(
+    "idle",
+  );
+
+  const goDemo = () =>
+    navigation.navigate("NewSession", { language, deviceId, demo: true });
+
+  const testWifi = async () => {
+    setStatus("testing");
+    const parsed = await fetchMatReading(host);
+    setStatus(parsed ? "ok" : "fail");
+    if (parsed) {
+      navigation.navigate("NewSession", {
+        language,
+        deviceId,
+        demo: false,
+        wifiHost: host.trim(),
+      });
+    }
+  };
 
   return (
     <View style={styles.screen}>
@@ -24,85 +56,44 @@ export function ConnectScreen() {
       <Text style={styles.device}>{deviceId}</Text>
       <Text style={styles.hint}>{copy.demoHint}</Text>
 
-      <BigButton
-        title={copy.demoMode}
-        onPress={() =>
-          navigation.navigate("NewSession", { language, deviceId, demo: true })
-        }
-      />
+      <BigButton title={copy.demoMode} onPress={goDemo} />
 
+      <Text style={styles.section}>{copy.wifiConnect}</Text>
+      <Text style={styles.meta}>
+        SSID {WIFI_SSID} · {WIFI_PASSWORD}
+      </Text>
+      <TextInput
+        value={host}
+        onChangeText={(v) => {
+          setHost(v);
+          setStatus("idle");
+        }}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="numbers-and-punctuation"
+        placeholder={copy.wifiHostLabel}
+        placeholderTextColor={colors.muted}
+        style={styles.input}
+      />
+      {status === "testing" ? (
+        <ActivityIndicator color={colors.navy} style={{ marginTop: 12 }} />
+      ) : null}
+      {status === "ok" ? (
+        <Text style={styles.ok}>{copy.wifiOk}</Text>
+      ) : null}
+      {status === "fail" ? (
+        <Text style={styles.fail}>{copy.wifiFail}</Text>
+      ) : null}
       <BigButton
-        title={copy.scanBle}
+        title={status === "testing" ? copy.wifiTesting : copy.wifiConnect}
         variant="ghost"
-        onPress={() => setShowBleInfo(true)}
+        onPress={testWifi}
       />
 
-      {/* Hardware Interface Info Modal */}
-      <Modal
-        visible={showBleInfo}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowBleInfo(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>ESP32 BLE Bridge Protocol</Text>
-            <Text style={styles.modalBody}>
-              The software frontend is decoupled and ready for direct hardware
-              pairing.
-            </Text>
-
-            <View style={styles.specBox}>
-              <Text style={styles.specLabel}>Service UUID:</Text>
-              <Text style={styles.specCode}>{BLE_CONFIG.SERVICE_UUID}</Text>
-
-              <Text style={[styles.specLabel, { marginTop: 8 }]}>
-                Characteristic UUID:
-              </Text>
-              <Text style={styles.specCode}>
-                {BLE_CONFIG.CHARACTERISTIC_UUID}
-              </Text>
-
-              <Text style={[styles.specLabel, { marginTop: 8 }]}>
-                1 Hz Notify Payload:
-              </Text>
-              <Text style={styles.specCode}>
-                vol_ml, rate_15, hr, sbp, si, state, batt, seq
-              </Text>
-            </View>
-
-            <View style={styles.noteRow}>
-              <Ionicons
-                name="information-circle-outline"
-                size={16}
-                color={colors.navy}
-                style={{ marginRight: 6 }}
-              />
-              <Text style={styles.modalNote}>
-                You are in demo mode!!
-              </Text>
-            </View>
-            <BigButton
-              title="Launch in Demo Mode"
-              onPress={() => {
-                setShowBleInfo(false);
-                navigation.navigate("NewSession", {
-                  language,
-                  deviceId,
-                  demo: true,
-                });
-              }}
-            />
-
-            <Pressable
-              onPress={() => setShowBleInfo(false)}
-              style={styles.closeBtn}
-            >
-              <Text style={styles.closeBtnText}>Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <Pressable onPress={goDemo} style={styles.later}>
+        <Ionicons name="bluetooth-outline" size={16} color={colors.muted} />
+        <Text style={styles.laterText}>{copy.scanBle}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -117,70 +108,31 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: "800", color: colors.ink },
   device: { fontSize: 22, fontWeight: "700", color: colors.navy, marginTop: 8 },
   hint: { fontSize: 16, color: colors.muted, marginTop: 12, marginBottom: 8 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
+  section: {
+    marginTop: 28,
+    fontSize: 18,
     fontWeight: "800",
     color: colors.ink,
-    marginBottom: 8,
   },
-  modalBody: {
-    fontSize: 14,
-    color: colors.muted,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  specBox: {
-    backgroundColor: "#F0F4F8",
-    padding: 12,
-    borderRadius: 8,
+  meta: { fontSize: 14, color: colors.muted, marginTop: 4, marginBottom: 8 },
+  input: {
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "#D8E2EC",
-    marginBottom: 12,
-  },
-  specLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.navy,
-  },
-  specCode: {
-    fontFamily: "monospace",
-    fontSize: 11,
+    borderColor: colors.border,
+    borderRadius: 12,
+    minHeight: 52,
+    paddingHorizontal: 14,
+    fontSize: 18,
     color: colors.ink,
-    marginTop: 2,
   },
-  noteRow: {
+  ok: { color: colors.green, marginTop: 8, fontWeight: "700" },
+  fail: { color: colors.red, marginTop: 8, fontWeight: "600" },
+  later: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    gap: 6,
+    marginTop: 20,
+    justifyContent: "center",
   },
-  modalNote: {
-    fontSize: 13,
-    color: colors.muted,
-    flex: 1,
-  },
-  closeBtn: {
-    alignItems: "center",
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-  closeBtnText: {
-    color: colors.navy,
-    fontWeight: "700",
-    fontSize: 15,
-  },
+  laterText: { color: colors.muted, fontWeight: "600" },
 });

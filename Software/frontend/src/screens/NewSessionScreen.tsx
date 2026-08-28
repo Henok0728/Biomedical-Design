@@ -13,18 +13,20 @@ type R = RouteProp<RootStackParamList, "NewSession">;
 
 export function NewSessionScreen() {
   const navigation = useNavigation<Nav>();
-  const { language, deviceId } = useRoute<R>().params;
+  const { language, deviceId, demo, wifiHost } = useRoute<R>().params;
   const copy = t(language);
   const [motherId, setMotherId] = useState("");
 
   const start = () => {
     const sessionId = `ses-${Date.now()}`;
-    simulator.startSession();
+    simulator.startSession(demo ? "demo" : "wifi");
     navigation.replace("Live", {
       language,
       deviceId,
       sessionId,
       motherId: motherId.trim() || undefined,
+      demo,
+      wifiHost,
     });
   };
 

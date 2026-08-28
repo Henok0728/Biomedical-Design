@@ -4,12 +4,19 @@ export type RootStackParamList = {
   Language: undefined;
   Ward: { language: Language };
   Connect: { language: Language; deviceId: string };
-  NewSession: { language: Language; deviceId: string; demo: boolean };
+  NewSession: {
+    language: Language;
+    deviceId: string;
+    demo: boolean;
+    wifiHost?: string;
+  };
   Live: {
     language: Language;
     deviceId: string;
     sessionId: string;
     motherId?: string;
+    demo: boolean;
+    wifiHost?: string;
   };
   Critical: { language: Language; sessionId: string };
   Summary: {

@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "tsx --test src/clinical/evaluateState.test.ts src/services/alarm.test.ts src/services/sessionStore.test.ts src/services/bleParser.test.ts"
+    "test": "tsx --test src/clinical/evaluateState.test.ts src/services/alarm.test.ts src/services/sessionStore.test.ts src/services/bleParser.test.ts src/services/wifiClient.test.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

@@ -26,25 +26,36 @@ class PphSimulator {
   private timer: ReturnType<typeof setInterval> | null = null;
   private listeners = new Set<Listener>();
   private lastSnap: SimulatorSnapshot;
+  private remoteRateMl: number | null = null;
+  source: "demo" | "wifi" = "demo";
 
   constructor() {
     this.lastSnap = this.buildSnapshot();
   }
 
-  startSession() {
-    this.volumeMl = 100;
-    this.hrBpm = 78;
-    this.sbpMmhg = 118;
+  startSession(source: "demo" | "wifi" = "demo") {
+    this.source = source;
+    this.remoteRateMl = null;
     this.sensorFail = false;
     this.seq = 0;
     const now = Date.now();
     this.startedAt = now;
-    this.volumeHistory = [
-      { at: now - 30000, volumeMl: 50 },
-      { at: now - 20000, volumeMl: 75 },
-      { at: now - 10000, volumeMl: 90 },
-      { at: now, volumeMl: 100 },
-    ];
+    if (source === "wifi") {
+      this.volumeMl = 0;
+      this.hrBpm = null;
+      this.sbpMmhg = null;
+      this.volumeHistory = [{ at: now, volumeMl: 0 }];
+    } else {
+      this.volumeMl = 100;
+      this.hrBpm = 78;
+      this.sbpMmhg = 118;
+      this.volumeHistory = [
+        { at: now - 30000, volumeMl: 50 },
+        { at: now - 20000, volumeMl: 75 },
+        { at: now - 10000, volumeMl: 90 },
+        { at: now, volumeMl: 100 },
+      ];
+    }
     this.ensureTick();
     this.emit();
   }
@@ -87,6 +98,21 @@ class PphSimulator {
     this.emit();
   }
 
+  applyRemoteReading(reading: DeviceReading) {
+    this.volumeMl = reading.volumeMl;
+    this.hrBpm = reading.hrBpm;
+    this.sbpMmhg = reading.sbpMmhg;
+    this.sensorFail = reading.sensorFail;
+    this.batteryPct = reading.batteryPct;
+    this.seq = reading.seq;
+    this.remoteRateMl = reading.volumeRateMlPer15min;
+    this.volumeHistory.push({ at: Date.now(), volumeMl: this.volumeMl });
+    if (this.volumeHistory.length > 120) {
+      this.volumeHistory.shift();
+    }
+    this.emit();
+  }
+
   snapshot(): SimulatorSnapshot {
     return this.lastSnap;
   }
@@ -115,6 +141,9 @@ class PphSimulator {
   }
 
   private ratePer15Min(): number {
+    if (this.remoteRateMl != null) {
+      return this.remoteRateMl;
+    }
     const cutoff = Date.now() - 15 * 60 * 1000;
     const window = this.volumeHistory.filter((p) => p.at >= cutoff);
     if (window.length < 2) {
