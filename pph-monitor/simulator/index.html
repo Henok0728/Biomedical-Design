@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPH HARDWARE SIMULATOR & CONTROL CONSOLE</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-icon">🩺</div>
+        <div>
+          <h1>PPH HARDWARE SIMULATOR</h1>
+          <p class="subtitle">Biomedical Engineering Competition Control Console</p>
+        </div>
+      </div>
+      <div class="connection-box">
+        <div id="statusPill" class="status-pill disconnected">
+          <span class="status-dot"></span>
+          <span id="statusText">DISCONNECTED</span>
+        </div>
+        <div class="backend-input-group">
+          <label for="backendUrl">Backend WS:</label>
+          <input type="text" id="backendUrl" value="ws://localhost:3000/ws" />
+          <button id="connectBtn" class="btn-sm">Connect</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="disclaimer-banner">
+      ⚠️ DEMO SIMULATION CONSOLE — Biomedical engineering competition prototype. Not clinically validated.
+    </div>
+
+    <!-- Main Grid -->
+    <main class="grid-layout">
+      <!-- Left Column: Global Controls & Preset Scenarios -->
+      <section class="card control-section">
+        <h2>1. Active Data Source</h2>
+        <div class="source-toggle">
+          <button id="sourceSimBtn" class="source-btn active">SIMULATOR</button>
+          <button id="sourceEspBtn" class="source-btn">ESP32 HARDWARE</button>
+        </div>
+
+        <h2>2. Clinical Simulation Scenarios</h2>
+        <div class="scenario-grid">
+          <button class="scenario-btn normal" data-scenario="NORMAL">
+            <span class="sc-icon">🟢</span>
+            <span class="sc-title">NORMAL</span>
+            <span class="sc-desc">Stable parameters</span>
+          </button>
+          <button class="scenario-btn mild" data-scenario="MILD_BLEEDING">
+            <span class="sc-icon">🟡</span>
+            <span class="sc-title">MILD BLEEDING</span>
+            <span class="sc-desc">+15 g/min, HR 88</span>
+          </button>
+          <button class="scenario-btn increasing" data-scenario="INCREASING_BLEEDING">
+            <span class="sc-icon">🟠</span>
+            <span class="sc-title">INCREASING BLEEDING</span>
+            <span class="sc-desc">+45 g/min, HR 105</span>
+          </button>
+          <button class="scenario-btn severe" data-scenario="SEVERE_BLEEDING">
+            <span class="sc-icon">🔴</span>
+            <span class="sc-title">SEVERE BLEEDING</span>
+            <span class="sc-desc">+90 g/min, HR 125</span>
+          </button>
+          <button class="scenario-btn movement" data-scenario="MOVEMENT">
+            <span class="sc-icon">⚠️</span>
+            <span class="sc-title">MOVEMENT / NOISE</span>
+            <span class="sc-desc">Motion score = 0.88</span>
+          </button>
+          <button class="scenario-btn reset" data-scenario="RESET">
+            <span class="sc-icon">🔄</span>
+            <span class="sc-title">RESET</span>
+            <span class="sc-desc">Zero mass & vitals</span>
+          </button>
+        </div>
+
+        <div class="calibration-box">
+          <h2>3. Load Cell Calibration</h2>
+          <div class="calib-controls">
+            <button id="tareBtn" class="btn-secondary">TARE LOAD CELL</button>
+            <div class="calib-input">
+              <input type="number" id="knownWeightInput" value="500" placeholder="g" />
+              <button id="calibBtn" class="btn-secondary">CALIBRATE</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center & Right: Manual Sensor Sliders & Monitors -->
+      <section class="card manual-section">
+        <h2>4. Manual Sensor Controls</h2>
+
+        <!-- Load Cell & Rate -->
+        <div class="sensor-group">
+          <div class="sensor-group-header">
+            <h3>⚖️ Load Cell & Fluid Accumulation</h3>
+            <span class="sensor-badge" id="loadCellHealth">OK</span>
+          </div>
+          <div class="slider-row">
+            <label>Mass (g): <span id="massVal">100.0</span> g</label>
+            <input type="range" id="massSlider" min="0" max="2500" step="5" value="100">
+          </div>
+          <div class="slider-row">
+            <label>Fluid Rate (g/min): <span id="rateVal">0.0</span> g/min</label>
+            <input type="range" id="rateSlider" min="0" max="200" step="1" value="0">
+          </div>
+        </div>
+
+        <!-- MAX30102 Hemodynamics -->
+        <div class="sensor-group">
+          <div class="sensor-group-header">
+            <h3>❤️ MAX30102 Pulse Oximeter</h3>
+            <span class="sensor-badge" id="maxHealth">OK</span>
+          </div>
+          <div class="slider-row">
+            <label>Heart Rate (BPM): <span id="hrVal">75</span> bpm</label>
+            <input type="range" id="hrSlider" min="40" max="180" step="1" value="75">
+          </div>
+          <div class="slider-row">
+            <label>SpO₂ (%): <span id="spo2Val">98</span> %</label>
+            <input type="range" id="spo2Slider" min="70" max="100" step="1" value="98">
+          </div>
+        </div>
+
+        <!-- TCS34725 Optical Color Sensor -->
+        <div class="sensor-group">
+          <div class="sensor-group-header">
+            <h3>🌈 TCS34725 Optical Characterization</h3>
+            <span class="sensor-badge" id="tcsHealth">OK</span>
+          </div>
+          <p class="sensor-note">Experimental optical characterization (not direct blood volume measurement)</p>
+          <div class="slider-row">
+            <label>Blood Fraction: <span id="bfVal">0.15</span></label>
+            <input type="range" id="bfSlider" min="0" max="1" step="0.01" value="0.15">
+          </div>
+          <div class="color-preview-box">
+            <div id="colorSwatch" class="color-swatch"></div>
+            <div class="rgb-readout">
+              R: <span id="rVal">140</span> | G: <span id="gVal">160</span> | B: <span id="bVal">142</span> | Clear: <span id="cVal">442</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MPU6050 Motion Score -->
+        <div class="sensor-group">
+          <div class="sensor-group-header">
+            <h3>🏃 MPU6050 Motion / Accelerometer</h3>
+            <span class="sensor-badge" id="mpuHealth">OK</span>
+          </div>
+          <div class="slider-row">
+            <label>Motion Score: <span id="motionVal">0.02</span> (<span id="qualityVal" class="quality-good">GOOD</span>)</label>
+            <input type="range" id="motionSlider" min="0" max="1" step="0.01" value="0.02">
+          </div>
+        </div>
+
+        <!-- Temperature Sensor -->
+        <div class="sensor-group">
+          <div class="sensor-group-header">
+            <h3>🌡️ Temperature Sensor</h3>
+            <span class="sensor-badge" id="tempHealth">OK</span>
+          </div>
+          <div class="slider-row">
+            <label>Temperature: <span id="tempVal">36.8</span> °C</label>
+            <input type="range" id="tempSlider" min="30.0" max="42.0" step="0.1" value="36.8">
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>Active Backend Protocol: <code>ws://&lt;ip&gt;:3000/ws</code></div>
+      <div>Connected Mobile App Clients: <span id="clientCount">0</span></div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
