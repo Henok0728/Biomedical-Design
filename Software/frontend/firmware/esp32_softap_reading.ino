@@ -1,5 +1,4 @@
 /*
- * Minimal ESP32 sketch for today's judge demo (SoftAP + HTTP).
  * Flash this if firmware does not already serve GET /reading as JSON.
  *
  * Phone: join Wi-Fi SSID PPH-MAT-04 / password pphmat04

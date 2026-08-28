@@ -62,7 +62,7 @@ const en = {
   saveAndSync: "View Sync Queue",
   sync: "DHIS2 Sync Queue",
   queued: "Waiting to send",
-  sent: "Sent (demo DHIS2)",
+  sent: "Sent (DHIS2)",
   syncAll: "Sync All to DHIS2",
   syncing: "Syncing records...",
   allSynced: "All records synchronized with facility DHIS2.",
