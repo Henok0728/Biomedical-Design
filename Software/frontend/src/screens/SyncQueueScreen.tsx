@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
@@ -76,7 +77,13 @@ export function SyncQueueScreen() {
 
         {/* Offline notice */}
         <View style={styles.noticeBanner}>
-          <Text style={styles.noticeText}>🌐 {copy.offlineBanner}</Text>
+          <Ionicons
+            name="shield-checkmark-outline"
+            size={16}
+            color={colors.navy}
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.noticeText}>{copy.offlineBanner}</Text>
         </View>
 
         {/* Sync Action Header */}
@@ -94,7 +101,13 @@ export function SyncQueueScreen() {
 
         {lastSyncResult ? (
           <View style={styles.successBanner}>
-            <Text style={styles.successText}>✓ {lastSyncResult}</Text>
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={18}
+              color={colors.greenDark}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.successText}>{lastSyncResult}</Text>
           </View>
         ) : null}
 
@@ -111,7 +124,13 @@ export function SyncQueueScreen() {
           </View>
         ) : sessions.length > 0 ? (
           <View style={styles.allSyncedBox}>
-            <Text style={styles.allSyncedText}>✓ {copy.allSynced}</Text>
+            <Ionicons
+              name="checkmark-done-circle"
+              size={20}
+              color={colors.greenDark}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.allSyncedText}>{copy.allSynced}</Text>
           </View>
         ) : null}
 
@@ -243,9 +262,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   noticeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#E2EEF8",
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#B8D5ED",
     marginBottom: 12,
@@ -254,6 +275,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.navy,
     fontWeight: "600",
+    flex: 1,
   },
   summaryBar: {
     flexDirection: "row",
@@ -303,6 +325,7 @@ const styles = StyleSheet.create({
     color: colors.navy,
   },
   successBanner: {
+    flexDirection: "row",
     backgroundColor: "#E8F4EC",
     padding: 12,
     borderRadius: 10,
@@ -310,6 +333,7 @@ const styles = StyleSheet.create({
     borderColor: "#B7DFCA",
     marginBottom: 12,
     alignItems: "center",
+    justifyContent: "center",
   },
   successText: {
     color: colors.greenDark,
@@ -317,6 +341,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   allSyncedBox: {
+    flexDirection: "row",
     backgroundColor: "#E8F4EC",
     padding: 12,
     borderRadius: 10,
@@ -324,6 +349,7 @@ const styles = StyleSheet.create({
     borderColor: "#B7DFCA",
     marginBottom: 16,
     alignItems: "center",
+    justifyContent: "center",
   },
   allSyncedText: {
     color: colors.greenDark,

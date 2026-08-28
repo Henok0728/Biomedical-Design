@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
@@ -70,10 +71,18 @@ export function ConnectScreen() {
               </Text>
             </View>
 
-            <Text style={styles.modalNote}>
-              💡 For rehearsals & judge presentations in Expo Go, tap Demo Mode
-              below.
-            </Text>
+            <View style={styles.noteRow}>
+              <Ionicons
+                name="information-circle-outline"
+                size={16}
+                color={colors.navy}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.modalNote}>
+                For rehearsals & judge presentations in Expo Go, tap Demo Mode
+                below.
+              </Text>
+            </View>
 
             <BigButton
               title="Launch in Demo Mode"
@@ -156,10 +165,15 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginTop: 2,
   },
+  noteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   modalNote: {
     fontSize: 13,
     color: colors.muted,
-    marginBottom: 8,
+    flex: 1,
   },
   closeBtn: {
     alignItems: "center",

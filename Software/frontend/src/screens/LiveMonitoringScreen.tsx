@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useRef, useState } from "react";
@@ -114,9 +115,17 @@ export function LiveMonitoringScreen() {
               {deviceId}
               {motherId ? ` · ${motherId}` : ""}
             </Text>
-            <Text style={[styles.elapsed, { color: palette.text }]}>
-              ⏱ {copy.elapsed} {formatElapsed(snap.startedAt)}
-            </Text>
+            <View style={styles.elapsedRow}>
+              <Ionicons
+                name="time-outline"
+                size={14}
+                color={palette.text}
+                style={{ marginRight: 4, opacity: 0.85 }}
+              />
+              <Text style={[styles.elapsed, { color: palette.text }]}>
+                {copy.elapsed} {formatElapsed(snap.startedAt)}
+              </Text>
+            </View>
           </View>
 
           {/* Quick Language Toggle */}
@@ -133,8 +142,14 @@ export function LiveMonitoringScreen() {
             onPress={() => alarmManager.unmute()}
             style={styles.mutedBanner}
           >
+            <Ionicons
+              name="volume-mute"
+              size={16}
+              color={colors.white}
+              style={{ marginRight: 6 }}
+            />
             <Text style={styles.mutedBannerText}>
-              🔕 {copy.muteRemaining}: {formatMuteRemaining(remainingMuteSec)} (
+              {copy.muteRemaining}: {formatMuteRemaining(remainingMuteSec)} (
               {copy.unmute})
             </Text>
           </Pressable>
@@ -231,8 +246,14 @@ export function LiveMonitoringScreen() {
             }}
             style={styles.muteButton}
           >
+            <Ionicons
+              name={isMuted ? "volume-high" : "volume-mute"}
+              size={20}
+              color={colors.ink}
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.muteButtonText}>
-              {isMuted ? `🔔 ${copy.unmute}` : `🔕 ${copy.mute}`}
+              {isMuted ? copy.unmute : copy.mute}
             </Text>
           </Pressable>
         </View>
@@ -298,11 +319,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     opacity: 0.95,
   },
+  elapsedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
   elapsed: {
     fontSize: 14,
     fontWeight: "600",
     opacity: 0.85,
-    marginTop: 2,
   },
   langBadge: {
     backgroundColor: "rgba(255, 255, 255, 0.25)",
@@ -318,11 +343,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   mutedBanner: {
+    flexDirection: "row",
     backgroundColor: "rgba(0, 0, 0, 0.35)",
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
   },
   mutedBannerText: {
@@ -401,10 +428,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   muteButton: {
+    flexDirection: "row",
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
   },
   muteButtonText: {
     fontSize: 18,

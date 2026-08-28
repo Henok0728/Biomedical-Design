@@ -1,7 +1,16 @@
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, ScrollView, Alert } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { stateLabelEn } from "../clinical/evaluateState";
 import { BigButton } from "../components/ui";
 import { t } from "../i18n/copy";
@@ -63,6 +72,8 @@ export function SessionSummaryScreen() {
     }
   };
 
+  const isSensorFail = params.finalState === "sensor_fail";
+
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -88,15 +99,16 @@ export function SessionSummaryScreen() {
             <Text
               style={[
                 styles.valueState,
-                params.finalState === "critical" ||
-                params.finalState === "sensor_fail"
+                params.finalState === "critical" || isSensorFail
                   ? styles.redText
                   : params.finalState === "monitor"
                     ? styles.yellowText
                     : styles.greenText,
               ]}
             >
-              {stateLabelEn(params.finalState).toUpperCase()}
+              {isSensorFail
+                ? "SENSOR FAIL"
+                : stateLabelEn(params.finalState).toUpperCase()}
             </Text>
           </View>
 
@@ -115,46 +127,62 @@ export function SessionSummaryScreen() {
           </View>
         </View>
 
-        {/* Offline Saved Indicator */}
+        {/* Offline Saved Indicator with Vector Icon */}
         <View style={styles.savedBanner}>
+          <Ionicons
+            name="cloud-done-outline"
+            size={18}
+            color={colors.greenDark}
+            style={{ marginRight: 8 }}
+          />
           <Text style={styles.savedBannerText}>
-            💾 {saved ? "Session saved to offline device storage" : "Saving..."}
+            {saved ? "Session saved to offline device storage" : "Saving..."}
           </Text>
         </View>
 
-        {/* Action Buttons */}
-        <BigButton
-          title={copy.saveAndSync}
-          onPress={() =>
-            navigation.navigate("Sync", { language: params.language })
-          }
-        />
+        {/* Action Buttons with Proper Spacing */}
+        <View style={styles.buttonGroup}>
+          <BigButton
+            title={copy.saveAndSync}
+            onPress={() =>
+              navigation.navigate("Sync", { language: params.language })
+            }
+          />
 
-        <Pressable
-          style={[styles.pdfButton, exporting && styles.pdfButtonDisabled]}
-          onPress={handleExportPdf}
-          disabled={exporting || !saved}
-        >
-          {exporting ? (
-            <ActivityIndicator size="small" color={colors.white} />
-          ) : (
-            <Text style={styles.pdfButtonText}>📄 Export PDF Report</Text>
-          )}
-        </Pressable>
+          <Pressable
+            style={[styles.pdfButton, exporting && styles.pdfButtonDisabled]}
+            onPress={handleExportPdf}
+            disabled={exporting || !saved}
+          >
+            {exporting ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <View style={styles.pdfButtonContent}>
+                <Ionicons
+                  name="document-text-outline"
+                  size={20}
+                  color={colors.white}
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.pdfButtonText}>Export PDF Report</Text>
+              </View>
+            )}
+          </Pressable>
 
-        <BigButton
-          title={copy.ward}
-          variant="ghost"
-          onPress={() =>
-            navigation.reset({
-              index: 1,
-              routes: [
-                { name: "Language" },
-                { name: "Ward", params: { language: params.language } },
-              ],
-            })
-          }
-        />
+          <BigButton
+            title={copy.ward}
+            variant="ghost"
+            onPress={() =>
+              navigation.reset({
+                index: 1,
+                routes: [
+                  { name: "Language" },
+                  { name: "Ward", params: { language: params.language } },
+                ],
+              })
+            }
+          />
+        </View>
       </ScrollView>
     </View>
   );
@@ -232,6 +260,7 @@ const styles = StyleSheet.create({
     color: colors.green,
   },
   savedBanner: {
+    flexDirection: "row",
     backgroundColor: "#E8F4EC",
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -240,32 +269,39 @@ const styles = StyleSheet.create({
     borderColor: "#B7DFCA",
     marginBottom: 16,
     alignItems: "center",
+    justifyContent: "center",
   },
   savedBannerText: {
     color: colors.greenDark,
     fontSize: 14,
     fontWeight: "700",
   },
+  buttonGroup: {
+    gap: 12,
+    marginTop: 4,
+  },
   pdfButton: {
     backgroundColor: colors.navy,
-    paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
-    shadowColor: colors.navy,
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
     minHeight: 56,
+    shadowColor: colors.navy,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  pdfButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   pdfButtonDisabled: {
     opacity: 0.65,
   },
   pdfButtonText: {
     color: colors.white,
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: 0.2,
+    fontSize: 18,
+    fontWeight: "700",
   },
 });

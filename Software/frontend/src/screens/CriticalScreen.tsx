@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
@@ -38,6 +39,7 @@ export function CriticalScreen() {
   };
 
   const isMuted = alarmManager.isMuted();
+  const isSensorFail = snap.sensorFail || snap.state === "sensor_fail";
 
   return (
     <View style={styles.screen}>
@@ -45,19 +47,56 @@ export function CriticalScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Emergency Beacon Tag */}
+        {/* Top Beacon Header with vector icon */}
         <View style={styles.beaconHeader}>
-          <Text style={styles.beaconText}>🚨 EMERGENCY PPH ALERT 🚨</Text>
+          <Ionicons
+            name={isSensorFail ? "hardware-chip-outline" : "warning"}
+            size={16}
+            color={colors.white}
+            style={styles.beaconIcon}
+          />
+          <Text style={styles.beaconText}>
+            {isSensorFail ? copy.sensorFailBeacon : copy.criticalBeacon}
+          </Text>
         </View>
 
-        <Text style={styles.title}>{copy.criticalTitle}</Text>
-        <Text style={styles.body}>{copy.criticalBody}</Text>
+        {/* Dynamic Title based on whether it is sensor fail or hemorrhage */}
+        <Text style={styles.title}>
+          {isSensorFail ? copy.sensorFailTitle : copy.criticalTitle}
+        </Text>
+        <Text style={styles.body}>
+          {isSensorFail ? copy.sensorFailSub : copy.criticalBody}
+        </Text>
+
+        {/* Sensor Fail Detailed Guidance Notice */}
+        {isSensorFail ? (
+          <View style={styles.sensorFailCard}>
+            <View style={styles.sensorFailHeader}>
+              <Ionicons
+                name="alert-circle"
+                size={22}
+                color="#FFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.sensorFailCardTitle}>
+                HARDWARE FAIL-SAFE ACTIVE
+              </Text>
+            </View>
+            <Text style={styles.sensorFailCardBody}>
+              {copy.sensorFailGuidance}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Big Volume & SI Callout */}
         <View style={styles.statsCard}>
           <View style={styles.statCol}>
             <Text style={styles.statLabel}>{copy.volume}</Text>
-            <Text style={styles.statValue}>{Math.round(snap.volumeMl)} mL</Text>
+            <Text style={styles.statValue}>
+              {isSensorFail && snap.volumeMl === 0
+                ? "—"
+                : `${Math.round(snap.volumeMl)} mL`}
+            </Text>
           </View>
           <View style={styles.statCol}>
             <Text style={styles.statLabel}>{copy.shockIndex}</Text>
@@ -69,7 +108,7 @@ export function CriticalScreen() {
 
         <Text style={styles.metaState}>
           STATUS: {stateLabelEn(snap.state).toUpperCase()}
-          {snap.sensorFail ? " (SENSOR FAIL-SAFE)" : ""}
+          {isSensorFail ? " (SENSOR FAIL-SAFE)" : ""}
         </Text>
 
         {/* First-Line Response Checklist */}
@@ -89,7 +128,13 @@ export function CriticalScreen() {
                 <View
                   style={[styles.checkbox, isChecked && styles.checkboxChecked]}
                 >
-                  {isChecked ? <Text style={styles.checkMark}>✓</Text> : null}
+                  {isChecked ? (
+                    <Ionicons
+                      name="checkmark-sharp"
+                      size={20}
+                      color={colors.red}
+                    />
+                  ) : null}
                 </View>
                 <Text
                   style={[
@@ -115,8 +160,14 @@ export function CriticalScreen() {
           }}
           style={styles.silenceButton}
         >
+          <Ionicons
+            name={isMuted ? "volume-high-outline" : "volume-mute-outline"}
+            size={20}
+            color={colors.white}
+            style={{ marginRight: 8 }}
+          />
           <Text style={styles.silenceButtonText}>
-            {isMuted ? `🔔 ${copy.unmute}` : `🔕 ${copy.mute}`}
+            {isMuted ? copy.unmute : copy.mute}
           </Text>
         </Pressable>
 
@@ -142,38 +193,68 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   beaconHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.35)",
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderRadius: 8,
     alignSelf: "center",
     marginBottom: 12,
   },
+  beaconIcon: {
+    marginRight: 6,
+  },
   beaconText: {
     color: colors.white,
     fontWeight: "900",
-    fontSize: 14,
-    letterSpacing: 1,
+    fontSize: 13,
+    letterSpacing: 0.8,
   },
   title: {
     color: colors.white,
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: "900",
     lineHeight: 38,
   },
   body: {
     color: colors.white,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
     marginTop: 6,
     opacity: 0.95,
+  },
+  sensorFailCard: {
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  sensorFailHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  sensorFailCardTitle: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  sensorFailCardBody: {
+    color: "rgba(255, 255, 255, 0.92)",
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "500",
   },
   statsCard: {
     flexDirection: "row",
     backgroundColor: "rgba(0, 0, 0, 0.25)",
     borderRadius: 14,
     padding: 14,
-    marginTop: 16,
+    marginTop: 14,
     marginBottom: 8,
   },
   statCol: {
@@ -187,13 +268,13 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: colors.white,
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "900",
     marginTop: 2,
   },
   metaState: {
     color: colors.white,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
     marginBottom: 16,
     textAlign: "center",
@@ -201,7 +282,7 @@ const styles = StyleSheet.create({
   },
   checklistHeader: {
     color: "rgba(255, 255, 255, 0.9)",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
     letterSpacing: 1,
     marginBottom: 8,
@@ -236,14 +317,9 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: colors.white,
   },
-  checkMark: {
-    color: colors.red,
-    fontWeight: "900",
-    fontSize: 18,
-  },
   checkLabel: {
     color: colors.white,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     flex: 1,
   },
@@ -252,17 +328,19 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   silenceButton: {
+    flexDirection: "row",
     backgroundColor: "rgba(0, 0, 0, 0.35)",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   silenceButtonText: {
     color: colors.white,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "800",
   },
 });

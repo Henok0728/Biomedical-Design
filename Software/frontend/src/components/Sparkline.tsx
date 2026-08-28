@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { StyleSheet, View, Text, LayoutChangeEvent } from "react-native";
 import Svg, {
@@ -197,10 +198,18 @@ export function Sparkline({
       {/* Waveform Reference Legend */}
       <View style={styles.legendRow}>
         <Text style={[styles.legendText, { color }]}>0 mL</Text>
-        <Text style={[styles.legendText, { color }]}>
-          📈 Real-time Blood Loss Trajectory
-        </Text>
-        <Text style={[styles.legendText, { color }]}>500 mL ⚠️</Text>
+        <View style={styles.legendCenter}>
+          <Ionicons
+            name="pulse-outline"
+            size={12}
+            color={color}
+            style={{ marginRight: 4, opacity: 0.85 }}
+          />
+          <Text style={[styles.legendText, { color }]}>
+            Real-time Blood Loss Trajectory
+          </Text>
+        </View>
+        <Text style={[styles.legendText, { color }]}>500 mL Critical</Text>
       </View>
     </View>
   );
@@ -225,6 +234,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     marginTop: 3,
+  },
+  legendCenter: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   legendText: {
     fontSize: 10,

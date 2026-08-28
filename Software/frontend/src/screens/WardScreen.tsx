@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
@@ -90,7 +91,11 @@ export function WardScreen() {
             <Text style={styles.badgeText}>{queuedCount}</Text>
           </View>
         ) : (
-          <Text style={styles.syncedCheck}>✓</Text>
+          <Ionicons
+            name="checkmark-circle"
+            size={22}
+            color={colors.green}
+          />
         )}
       </Pressable>
 
