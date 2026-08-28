@@ -5,21 +5,36 @@ import {
 } from "../clinical/evaluateState";
 import type { AlertState, DeviceReading } from "../clinical/types";
 
+export type SensorSource = "SIMULATOR" | "ESP32";
+export type QualityLevel = "GOOD" | "UNRELIABLE" | "ERROR";
+
+export interface SensorHealth {
+  load_cell: boolean;
+  max30102: boolean;
+  tcs34725: boolean;
+  mpu6050: boolean;
+}
+
 export type SimulatorSnapshot = DeviceReading & {
   state: AlertState;
   severity: ReturnType<typeof displaySeverity>;
   startedAt: number | null;
   history: { at: number; volumeMl: number }[];
+  source: SensorSource;
+  measurementQuality: QualityLevel;
+  sensorHealth: SensorHealth;
+  motionLevel: number;
+  lastPacketAt: number | null;
 };
 
 type Listener = (snap: SimulatorSnapshot) => void;
 
 class PphSimulator {
-  private volumeMl = 80;
-  private hrBpm: number | null = 78;
+  private volumeMl = 100;
+  private hrBpm: number | null = 75;
   private sbpMmhg: number | null = 118;
   private sensorFail = false;
-  private batteryPct = 92;
+  private batteryPct = 95;
   private seq = 0;
   private startedAt: number | null = null;
   private volumeHistory: { at: number; volumeMl: number }[] = [];
@@ -27,13 +42,24 @@ class PphSimulator {
   private listeners = new Set<Listener>();
   private lastSnap: SimulatorSnapshot;
 
+  private source: SensorSource = "SIMULATOR";
+  private measurementQuality: QualityLevel = "GOOD";
+  private motionLevel = 0.02;
+  private lastPacketAt: number | null = null;
+  private sensorHealth: SensorHealth = {
+    load_cell: true,
+    max30102: true,
+    tcs34725: true,
+    mpu6050: true,
+  };
+
   constructor() {
     this.lastSnap = this.buildSnapshot();
   }
 
   startSession() {
     this.volumeMl = 100;
-    this.hrBpm = 78;
+    this.hrBpm = 75;
     this.sbpMmhg = 118;
     this.sensorFail = false;
     this.seq = 0;
@@ -62,6 +88,38 @@ class PphSimulator {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  updateFromBackendPacket(packet: {
+    source: SensorSource;
+    timestamp: string;
+    data: {
+      mass_g: number;
+      fluid_rate_g_min: number;
+      heart_rate: number | null;
+      spo2: number | null;
+      motion_level: number;
+      measurement_quality: QualityLevel;
+      sensor_health: SensorHealth;
+    };
+  }) {
+    this.source = packet.source;
+    this.volumeMl = packet.data.mass_g;
+    this.hrBpm = packet.data.heart_rate;
+    this.motionLevel = packet.data.motion_level;
+    this.measurementQuality = packet.data.measurement_quality;
+    this.sensorHealth = packet.data.sensor_health;
+    this.sensorFail =
+      packet.data.measurement_quality === "ERROR" ||
+      !packet.data.sensor_health.load_cell;
+    this.lastPacketAt = Date.now();
+
+    this.volumeHistory.push({ at: Date.now(), volumeMl: this.volumeMl });
+    if (this.volumeHistory.length > 120) {
+      this.volumeHistory.shift();
+    }
+
+    this.emit();
   }
 
   addVolume(ml: number) {
@@ -111,6 +169,11 @@ class PphSimulator {
       severity: displaySeverity(state),
       startedAt: this.startedAt,
       history: [...this.volumeHistory],
+      source: this.source,
+      measurementQuality: this.measurementQuality,
+      sensorHealth: this.sensorHealth,
+      motionLevel: this.motionLevel,
+      lastPacketAt: this.lastPacketAt,
     };
   }
 

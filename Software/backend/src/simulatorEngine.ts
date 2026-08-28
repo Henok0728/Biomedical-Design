@@ -9,7 +9,6 @@ export class SimulatorEngine {
   private accelY = 0.02;
   private accelZ = 1.0;
   private motionLevel = 0.02;
-  private temperature = 36.8;
   private bloodFraction = 0.15;
   private manualFluidRateGMin: number | null = null;
   private massHistory: { time: number; mass: number }[] = [];
@@ -31,7 +30,6 @@ export class SimulatorEngine {
         this.accelX = 0.01;
         this.accelY = 0.02;
         this.accelZ = 1.0;
-        this.temperature = 36.8;
         this.bloodFraction = 0.15;
         break;
 
@@ -72,7 +70,6 @@ export class SimulatorEngine {
         this.accelX = 0.01;
         this.accelY = 0.02;
         this.accelZ = 1.0;
-        this.temperature = 36.8;
         this.bloodFraction = 0.15;
         this.resetHistory();
         break;
@@ -87,7 +84,6 @@ export class SimulatorEngine {
     if (data.heart_rate !== undefined) this.heartRate = data.heart_rate;
     if (data.spo2 !== undefined) this.spo2 = data.spo2;
     if (data.motion_level !== undefined) this.motionLevel = data.motion_level;
-    if (data.temperature !== undefined) this.temperature = data.temperature;
     if (data.blood_fraction !== undefined) this.bloodFraction = data.blood_fraction;
     if (data.accel_x !== undefined) this.accelX = data.accel_x;
     if (data.accel_y !== undefined) this.accelY = data.accel_y;
@@ -170,14 +166,12 @@ export class SimulatorEngine {
       accel_y: Math.round(this.accelY * 100) / 100,
       accel_z: Math.round(this.accelZ * 100) / 100,
       motion_level: Math.round(this.motionLevel * 100) / 100,
-      temperature: Math.round(this.temperature * 10) / 10,
       measurement_quality: quality,
       sensor_health: {
         load_cell: true,
         max30102: this.heartRate !== null,
         tcs34725: true,
-        mpu6050: true,
-        temp: true
+        mpu6050: true
       },
       blood_fraction: Math.round(bf * 100) / 100
     };

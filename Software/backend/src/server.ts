@@ -47,8 +47,7 @@ function broadcast(msg: NormalizedSensorMessage | SystemStatusMessage): void {
   });
 }
 
-// 1 Hz Periodic Broadcast Loop
-setInterval(() => {
+function broadcastSensorData(): void {
   const data = getLatestNormalizedData();
   const packet: NormalizedSensorMessage = {
     type: "sensor_data",
@@ -57,7 +56,13 @@ setInterval(() => {
     data
   };
   broadcast(packet);
+}
+
+// 1 Hz Periodic Broadcast Loop (unref'd to allow clean test exit)
+const broadcastInterval = setInterval(() => {
+  broadcastSensorData();
 }, 1000);
+broadcastInterval.unref();
 
 // WebSocket Handler
 wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
@@ -89,32 +94,30 @@ wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
         currentSource = msg.source;
         console.log(`[WS] Source changed to: ${currentSource}`);
         broadcastStatus();
+        broadcastSensorData();
       } else if (msg.type === "simulation_command") {
         simulator.setScenario(msg.command);
         console.log(`[WS] Scenario changed to: ${msg.command}`);
         broadcastStatus();
+        broadcastSensorData();
       } else if (msg.type === "simulation_update") {
         simulator.updateManualData(msg.data);
+        broadcastSensorData();
       } else if (msg.type === "sensor_data" && msg.source === "ESP32") {
         esp32Data = msg.data;
         lastEsp32Seen = Date.now();
         if (currentSource === "ESP32") {
-          // Immediately broadcast hardware updates
-          const packet: NormalizedSensorMessage = {
-            type: "sensor_data",
-            source: "ESP32",
-            timestamp: new Date().toISOString(),
-            data: msg.data
-          };
-          broadcast(packet);
+          broadcastSensorData();
         }
       } else if (msg.type === "tare_load_cell") {
         console.log("[WS] Load cell tare requested");
         simulator.resetHistory();
+        broadcastSensorData();
       } else if (msg.type === "calibrate_load_cell") {
         if (msg.known_weight_g > 0) {
           calibrationFactor = msg.known_weight_g / 500;
           console.log(`[WS] Calibrated factor set to ${calibrationFactor}`);
+          broadcastStatus();
         }
       }
     } catch (err) {
@@ -156,6 +159,7 @@ app.post("/api/source", (req: Request, res: Response) => {
   if (source === "SIMULATOR" || source === "ESP32") {
     currentSource = source;
     broadcastStatus();
+    broadcastSensorData();
     res.json({ success: true, source: currentSource });
   } else {
     res.status(400).json({ error: "Invalid source. Must be SIMULATOR or ESP32." });
@@ -175,6 +179,7 @@ app.post("/api/scenario", (req: Request, res: Response) => {
   if (validScenarios.includes(command)) {
     const data = simulator.setScenario(command);
     broadcastStatus();
+    broadcastSensorData();
     res.json({ success: true, activeScenario: command, data });
   } else {
     res.status(400).json({ error: "Invalid scenario command." });
@@ -183,11 +188,13 @@ app.post("/api/scenario", (req: Request, res: Response) => {
 
 app.post("/api/update", (req: Request, res: Response) => {
   const data = simulator.updateManualData(req.body);
+  broadcastSensorData();
   res.json({ success: true, data });
 });
 
 app.post("/api/tare", (_req: Request, res: Response) => {
   simulator.resetHistory();
+  broadcastSensorData();
   res.json({ success: true, message: "Load cell tared" });
 });
 
@@ -195,6 +202,7 @@ app.post("/api/calibrate", (req: Request, res: Response) => {
   const { known_weight_g } = req.body;
   if (known_weight_g && known_weight_g > 0) {
     calibrationFactor = known_weight_g / 500;
+    broadcastStatus();
     res.json({ success: true, calibrationFactor });
   } else {
     res.status(400).json({ error: "Invalid known_weight_g" });
@@ -210,4 +218,4 @@ server.listen(PORT, () => {
   console.log(`===================================================`);
 });
 
-export { app, server, simulator };
+export { app, server, simulator, wss, broadcastInterval };

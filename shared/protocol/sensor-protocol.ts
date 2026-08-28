@@ -11,7 +11,6 @@ export interface SensorHealth {
   max30102: boolean;
   tcs34725: boolean;
   mpu6050: boolean;
-  temp: boolean;
 }
 
 export interface SensorDataPayload {
@@ -27,7 +26,6 @@ export interface SensorDataPayload {
   accel_y: number;
   accel_z: number;
   motion_level: number;
-  temperature: number;
   measurement_quality: QualityLevel;
   sensor_health: SensorHealth;
   blood_fraction?: number;

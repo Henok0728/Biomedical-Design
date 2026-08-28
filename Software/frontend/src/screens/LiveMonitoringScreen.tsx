@@ -1,6 +1,6 @@
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
 import { displaySeverity, stateLabelEn } from "../clinical/evaluateState";
 import type { Language } from "../clinical/types";
@@ -9,6 +9,7 @@ import { BigButton } from "../components/ui";
 import { guidance, t } from "../i18n/copy";
 import type { RootStackParamList } from "../navigation/types";
 import { alarmManager } from "../services/alarm";
+import { webSocketService } from "../services/WebSocketService";
 import { simulator } from "../simulator/PphSimulator";
 import { useSimulatorSnapshot } from "../simulator/SimulatorContext";
 import { colors, severityColors } from "../theme/colors";
@@ -32,6 +33,12 @@ function formatMuteRemaining(seconds: number) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function formatTimeOnly(timestamp: number | null) {
+  if (!timestamp) return "—";
+  const d = new Date(timestamp);
+  return d.toTimeString().split(" ")[0];
+}
+
 export function LiveMonitoringScreen() {
   const navigation = useNavigation<Nav>();
   const routeParams = useRoute<R>().params;
@@ -43,6 +50,12 @@ export function LiveMonitoringScreen() {
   const peakRef = useRef(snap.volumeMl);
   const pushedCritical = useRef(false);
   const [, setTick] = useState(0);
+
+  const connState = useSyncExternalStore(
+    (onStoreChange) => webSocketService.subscribe(onStoreChange),
+    () => webSocketService.getConnectionState(),
+    () => webSocketService.getConnectionState()
+  );
 
   // Sync alarm manager state
   useEffect(() => {
@@ -101,12 +114,55 @@ export function LiveMonitoringScreen() {
     });
   };
 
+  const health = snap.sensorHealth || {
+    load_cell: true,
+    max30102: true,
+    tcs34725: true,
+    mpu6050: true,
+  };
+
   return (
     <View style={[styles.screen, { backgroundColor: palette.bg }]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Connection & Source Status Header Bar */}
+        <View style={styles.statusBarRow}>
+          <View style={styles.connPill}>
+            <View
+              style={[
+                styles.connDot,
+                connState === "CONNECTED"
+                  ? styles.dotGreen
+                  : styles.dotRed,
+              ]}
+            />
+            <Text style={styles.connText}>
+              {connState === "CONNECTED"
+                ? "BACKEND CONNECTED"
+                : "DISCONNECTED"}
+            </Text>
+          </View>
+
+          <View style={styles.sourcePill}>
+            <Text style={styles.sourceText}>
+              SOURCE: {snap.source ?? "SIMULATOR"}
+            </Text>
+          </View>
+
+          <Text style={styles.timestampText}>
+            ⏱ {formatTimeOnly(snap.lastPacketAt ?? snap.at)}
+          </Text>
+        </View>
+
+        {/* Safety Disclaimer Banner */}
+        <View style={styles.safetyBanner}>
+          <Text style={styles.safetyText}>
+            ⚠️ Biomedical engineering competition prototype. Not clinically validated. DEMO SIMULATION THRESHOLD.
+          </Text>
+        </View>
+
         {/* Top Header Bar */}
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
@@ -126,6 +182,15 @@ export function LiveMonitoringScreen() {
             </Text>
           </Pressable>
         </View>
+
+        {/* Motion / Quality Alert Banner */}
+        {snap.measurementQuality === "UNRELIABLE" ? (
+          <View style={styles.unreliableBanner}>
+            <Text style={styles.unreliableText}>
+              ⚠️ MOTION: HIGH · MEASUREMENT QUALITY: UNRELIABLE
+            </Text>
+          </View>
+        ) : null}
 
         {/* Mute Status Pill / Banner */}
         {isMuted ? (
@@ -150,7 +215,7 @@ export function LiveMonitoringScreen() {
           </Text>
         </View>
 
-        {/* Primary Arm's-Length Metric: Huge Volume */}
+        {/* Primary Metric: Huge Mass / Volume */}
         <View style={styles.heroMetric}>
           <Text
             style={[styles.volumeNumber, { color: palette.text }]}
@@ -160,7 +225,7 @@ export function LiveMonitoringScreen() {
             {Math.round(snap.volumeMl)}
           </Text>
           <Text style={[styles.volumeUnit, { color: palette.text }]}>
-            mL · {copy.volume}
+            g · Mass Accumulation
           </Text>
         </View>
 
@@ -172,6 +237,43 @@ export function LiveMonitoringScreen() {
             color={palette.text}
             showLabels={false}
           />
+        </View>
+
+        {/* Sensor Health Status Bar */}
+        <View style={styles.healthContainer}>
+          <Text style={styles.healthTitle}>SENSOR HEALTH DIAGNOSTICS</Text>
+          <View style={styles.healthGrid}>
+            <View style={styles.healthItem}>
+              <Text style={styles.healthLabel}>LOAD CELL</Text>
+              <Text style={health.load_cell ? styles.hOk : styles.hErr}>
+                {health.load_cell ? "● OK" : "○ ERR"}
+              </Text>
+            </View>
+            <View style={styles.healthItem}>
+              <Text style={styles.healthLabel}>MAX30102</Text>
+              <Text style={health.max30102 ? styles.hOk : styles.hErr}>
+                {health.max30102 ? "● OK" : "○ ERR"}
+              </Text>
+            </View>
+            <View style={styles.healthItem}>
+              <Text style={styles.healthLabel}>TCS34725</Text>
+              <Text style={health.tcs34725 ? styles.hOk : styles.hErr}>
+                {health.tcs34725 ? "● OK" : "○ ERR"}
+              </Text>
+            </View>
+            <View style={styles.healthItem}>
+              <Text style={styles.healthLabel}>MPU6050</Text>
+              <Text style={health.mpu6050 ? styles.hOk : styles.hErr}>
+                {health.mpu6050 ? "● OK" : "○ ERR"}
+              </Text>
+            </View>
+            <View style={styles.healthItem}>
+              <Text style={styles.healthLabel}>ESP32</Text>
+              <Text style={snap.source === "ESP32" ? styles.hOk : styles.hMuted}>
+                {snap.source === "ESP32" ? "● LIVE" : "○ OFF"}
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Metric Cards Grid */}
@@ -193,11 +295,11 @@ export function LiveMonitoringScreen() {
           </View>
 
           <View style={styles.metricCard}>
-            <Text style={styles.metricCardLabel}>{copy.rate}</Text>
+            <Text style={styles.metricCardLabel}>Fluid Rate</Text>
             <Text style={styles.metricCardValue}>
               {Math.round(snap.volumeRateMlPer15min)}
             </Text>
-            <Text style={styles.metricSub}>mL / 15m</Text>
+            <Text style={styles.metricSub}>g / min</Text>
           </View>
         </View>
 
@@ -219,7 +321,7 @@ export function LiveMonitoringScreen() {
           </View>
         </View>
 
-        {/* Alarm Controls */}
+        {/* Alarm & Load Cell Controls */}
         <View style={styles.actionSection}>
           <Pressable
             onPress={() => {
@@ -239,7 +341,7 @@ export function LiveMonitoringScreen() {
 
         {/* Demo Simulator Controls Bar */}
         <View style={styles.demoControlBox}>
-          <Text style={styles.demoControlTitle}>DEMO CONTROLS</Text>
+          <Text style={styles.demoControlTitle}>DEMO & HARDWARE CONTROLS</Text>
           <View style={styles.demoButtonRow}>
             <Pressable
               style={styles.demoBtn}
@@ -254,14 +356,22 @@ export function LiveMonitoringScreen() {
               <Text style={styles.demoBtnText}>{copy.raiseSi}</Text>
             </Pressable>
           </View>
-          <Pressable
-            style={[styles.demoBtn, styles.demoBtnFull]}
-            onPress={() => simulator.setSensorFail(!snap.sensorFail)}
-          >
-            <Text style={styles.demoBtnText}>
-              {snap.sensorFail ? copy.restoreSensor : copy.failSensor}
-            </Text>
-          </Pressable>
+          <View style={styles.demoButtonRow}>
+            <Pressable
+              style={styles.demoBtn}
+              onPress={() => webSocketService.sendTare()}
+            >
+              <Text style={styles.demoBtnText}>Tare Load Cell</Text>
+            </Pressable>
+            <Pressable
+              style={styles.demoBtn}
+              onPress={() => simulator.setSensorFail(!snap.sensorFail)}
+            >
+              <Text style={styles.demoBtnText}>
+                {snap.sensorFail ? copy.restoreSensor : copy.failSensor}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* End Session */}
@@ -278,11 +388,83 @@ export function LiveMonitoringScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingTop: 44,
+    paddingTop: 36,
   },
   scrollContent: {
     paddingHorizontal: 18,
     paddingBottom: 40,
+  },
+  statusBarRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.25)",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  connPill: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  connDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  dotGreen: { backgroundColor: "#10B981" },
+  dotRed: { backgroundColor: "#EF4444" },
+  connText: {
+    color: colors.white,
+    fontWeight: "800",
+    fontSize: 11,
+  },
+  sourcePill: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  sourceText: {
+    color: colors.white,
+    fontWeight: "800",
+    fontSize: 11,
+  },
+  timestampText: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontWeight: "600",
+    fontSize: 11,
+  },
+  safetyBanner: {
+    backgroundColor: "rgba(245, 158, 11, 0.25)",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.4)",
+  },
+  safetyText: {
+    color: "#FEF08A",
+    fontWeight: "700",
+    fontSize: 11,
+    textAlign: "center",
+  },
+  unreliableBanner: {
+    backgroundColor: "#DC2626",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    alignItems: "center",
+  },
+  unreliableText: {
+    color: colors.white,
+    fontWeight: "900",
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
   headerRow: {
     flexDirection: "row",
@@ -364,6 +546,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     minHeight: 60,
   },
+  healthContainer: {
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  healthTitle: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "rgba(255, 255, 255, 0.8)",
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  healthGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  healthItem: {
+    alignItems: "center",
+  },
+  healthLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  hOk: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#34D399",
+    marginTop: 2,
+  },
+  hErr: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#F87171",
+    marginTop: 2,
+  },
+  hMuted: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.5)",
+    marginTop: 2,
+  },
   metricGrid: {
     flexDirection: "row",
     gap: 10,
@@ -438,11 +663,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-  demoBtnFull: {
-    flex: undefined,
-  },
   demoBtnText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
     color: colors.ink,
   },

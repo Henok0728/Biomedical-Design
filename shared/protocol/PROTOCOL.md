@@ -21,7 +21,7 @@ This document defines the unified WebSocket communication protocol for the Postp
                      ┌───────────────────┐
                      │ React Native App  │
                      │     Android       │
-                     └───────────────────┘
+                     └─────────┬─────────┘
 ```
 
 The Node.js Backend acts as the single source of truth. It manages the active data source (`SIMULATOR` or `ESP32`) and broadcasts a single normalized JSON format to all connected clients.
@@ -50,14 +50,12 @@ Broadcasted by backend at ~1 Hz (or whenever sensor state updates).
     "accel_y": 0.01,
     "accel_z": 1.01,
     "motion_level": 0.03,
-    "temperature": 36.8,
     "measurement_quality": "GOOD",
     "sensor_health": {
       "load_cell": true,
       "max30102": true,
       "tcs34725": true,
-      "mpu6050": true,
-      "temp": true
+      "mpu6050": true
     },
     "blood_fraction": 0.35
   }
@@ -75,7 +73,6 @@ Broadcasted by backend at ~1 Hz (or whenever sensor state updates).
 | `red`, `green`, `blue`, `clear` | `number` | Raw optical readings from TCS34725 |
 | `accel_x`, `accel_y`, `accel_z` | `number` | Acceleration in g from MPU6050 |
 | `motion_level` | `number` | Calculated movement vector |
-| `temperature` | `number` | Temperature reading (°C) |
 | `measurement_quality` | `"GOOD" \| "UNRELIABLE" \| "ERROR"` | Quality indicator based on motion and hardware status |
 | `sensor_health` | `object` | Health status flags for individual physical sensors |
 
